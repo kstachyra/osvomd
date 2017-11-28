@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="ks.pdi1.MainActivity"
+    tools:layout_editor_absoluteY="73dp"
+    tools:layout_editor_absoluteX="0dp">
+
+    <Button
+        android:id="@+id/button_POR"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        android:text="POR"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginEnd="8dp" />
+
+    <Button
+        android:id="@+id/button_WZ"
+        android:layout_width="88dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:text="WZ"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginStart="8dp" />
+
+    <Button
+        android:id="@+id/button_CLR"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:text="CLR"
+        app:layout_constraintBottom_toBottomOf="@+id/spenViewLayout"
+        app:layout_constraintLeft_toRightOf="@+id/button_WZ"
+        app:layout_constraintRight_toLeftOf="@+id/button_POR"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <RelativeLayout
+        android:id="@+id/spenViewLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="w,1:1"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>
