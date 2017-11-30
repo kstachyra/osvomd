@@ -204,11 +204,7 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy()
     {
         super.onDestroy();
-
-
         clearSpen();
-
-
         //thread.interrupt();
     }
 

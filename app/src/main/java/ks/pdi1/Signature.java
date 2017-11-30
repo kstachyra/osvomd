@@ -63,6 +63,7 @@ public class Signature
         {
             this.clearBeginEnd();
             this.resize();
+            Log.d("pdi.signature", "signature normalized");
         }
         else
         {
@@ -81,14 +82,14 @@ public class Signature
     * podpis musi zawierać jakiekolwiek punkty*/
     private void clearBeginEnd()
     {
-        while (points.get(0).press == 0.0)
+        while (points.size()>0 && points.get(0).press == 0.0)
         {
             points.remove(0);
             /*Iterator <Point> iter = points.listIterator();
             if (iter.hasNext()) iter.next();
             iter.remove();*/
         }
-        while (points.get(points.size()-1).press == 0.0)
+        while (points.size()>0 && points.get(points.size()-1).press == 0.0)
         {
             points.remove(points.size()-1);
         }
