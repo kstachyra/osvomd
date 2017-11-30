@@ -111,7 +111,7 @@ public class Signature
     private String rename()
     {
         Date currentDate = Calendar.getInstance().getTime();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__hh_mm_SS");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss");
         String stringDate = formatter.format(currentDate);
         return stringDate;
     }

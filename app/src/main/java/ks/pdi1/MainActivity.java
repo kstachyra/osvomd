@@ -104,6 +104,8 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
             sig.print();
 
+            captureSpenSurfaceView();
+
 
 
             /*czyszczenie strony
@@ -350,8 +352,9 @@ public class MainActivity extends AppCompatActivity
     {
 
         // Select the location to save the image.
-        File fileCacheItem = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File fileCacheItem = Environment.getExternalStoragePublicDirectory(Constants.EX_PUB_DIR_PATH);
 
+        //twórz folder, jeśli go nie ma
         if (!fileCacheItem.exists())
         {
             if (!fileCacheItem.mkdirs())
@@ -361,7 +364,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        String filePath = fileCacheItem.getPath() + "/CaptureImg.png";
+        String filePath = fileCacheItem.getAbsolutePath() + "/" + sig.name + ".png";
         // Save the screen shot as a Bitmap.
         Bitmap imgBitmap = mSpenSurfaceView.captureCurrentView(true);
 
@@ -371,7 +374,7 @@ public class MainActivity extends AppCompatActivity
         {
         // Save the Bitmap in the selected location.
             out = new FileOutputStream(filePath);
-            imgBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            imgBitmap.compress(Bitmap.CompressFormat.PNG, Constants.COMPRESS, out);
 
         } catch (Exception e)
         {
@@ -390,8 +393,6 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
             }
         }
-
-
 
         imgBitmap.recycle();
         Toast.makeText(mContext, filePath, Toast.LENGTH_LONG).show();
