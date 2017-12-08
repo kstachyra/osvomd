@@ -412,7 +412,8 @@ public class MainActivity extends AppCompatActivity
 
         String filePath = fileCacheItem.getAbsolutePath() + "/" + sig.name + ".png";
         // Save the screen shot as a Bitmap.
-        Bitmap imgBitmap = mSpenSurfaceView.captureCurrentView(true);
+        //Bitmap imgBitmap = mSpenSurfaceView.captureCurrentView(true);
+        Bitmap imgBitmap = mSpenSurfaceView.capturePage(1);
 
 
         OutputStream out = null;
