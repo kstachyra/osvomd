@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity
         public void onClick(View v)
         {
             Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
-            clearCurrentSig();
+            sig.normalize();
         }
     };
 
@@ -140,8 +140,7 @@ public class MainActivity extends AppCompatActivity
         public void onClick(View v)
         {
             Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
-            sig.normalize();
-
+            clearCurrentSig();
 
             /*synchronized (lock)
             {

@@ -59,23 +59,37 @@ public class Signature
     /*przekształca surowy zbiór punktów na znormalizowany*/
     public void normalize()
     {
-        if (this.points.size()>0)
+        try
         {
-            this.clearBeginEnd();
-            this.resize();
-            Log.d("pdi.signature", "signature normalized");
+            if (this.points.size() > 0)
+            {
+                this.clearBeginEnd();
+                this.resize();
+                this.reTime();
+                Log.d("pdi.signature", "signature normalized");
+            } else
+            {
+                Log.d("pdi.signature", "can't normalize, !points.size > 0");
+            }
         }
-        else
+        catch (Exception e)
         {
-            Log.d("pdi.signature", "can't normalize, !points.size > 0");
+            e.printStackTrace();
         }
     }
 
     /*zeruje obecny podpis*/
     public void clear()
     {
-        name = rename();
-        points.clear();
+        try
+        {
+            name = rename();
+            points.clear();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     /*usuwa punkty z zerowym naciskiem na początku i na końcu podpisu
@@ -98,14 +112,37 @@ public class Signature
     /*standaryzuje wartości X i Y od 0 do 1*/
     private void resize()
     {
-        //TODO Signature.resize();
+        //znajdź min i max wartości punktów
+        double minX = Double.MAX_VALUE;
+        double maxX = 0;
+        double minY = Double.MAX_VALUE;
+        double maxY = 0;
+        for (Point p : points)
+        {
+            if(p.x < minX) minX = p.x;
+            if(p.x > maxX) maxX = p.x;
+            if(p.y < minY) minY = p.y;
+            if(p.y > maxY) maxY = p.y;
+        }
+
+        //znormalizuj od 0 do 1
+        double rangeX = maxX - minX;
+        double rangeY = maxY - minY;
+        for (Point p : points)
+        {
+            p.x = (p.x - minX)/rangeX;
+            p.y = (p.y - minY)/rangeY;
+        }
     }
 
     /*ustawia czas względny*/
     private void reTime()
     {
-        //TODO Signature.reTime();
-        //for (Point)
+        long firstPointTime = points.get(0).time;
+        for (Point p : points)
+        {
+            p.time -= firstPointTime;
+        }
     }
 
     private String rename()
