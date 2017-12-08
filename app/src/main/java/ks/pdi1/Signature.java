@@ -43,6 +43,14 @@ public class Signature
         this.points = new LinkedList<Point>();
     }
 
+    Signature (byte[] b)
+    {
+        this.name = rename();
+        this.points = new LinkedList<Point>();
+
+        getDataFromBytes(b);
+    }
+
     void addPoint(long time, double x, double y, double press)
     {
         points.add(new Point(time, x, y, press));
@@ -168,5 +176,19 @@ public class Signature
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss");
         String stringDate = formatter.format(currentDate);
         return stringDate;
+    }
+
+    private void getDataFromBytes(byte[] b)
+    {
+        String sigString = new String(b, StandardCharsets.UTF_8);
+        String[] lines = sigString.split(System.lineSeparator());
+        for (String line : lines)
+        {
+            String[] values = line.split("\t");
+            if (values.length == 4)
+            {
+                this.addPoint(Long.parseLong(values[0]), Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3]));
+            }
+        }
     }
 }

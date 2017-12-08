@@ -63,7 +63,6 @@ public class MainActivity extends AppCompatActivity
     private SpenNoteDoc mSpenNoteDoc;
     private SpenPageDoc mSpenPageDoc;
     private SpenSurfaceView mSpenSurfaceView;
-    //private int mToolType = SpenSurfaceView.TOOL_SPEN;
 
 
     //LISTENERY
@@ -357,46 +356,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    //TODO optymalizuj wyjątki dostępu do danych, gdzieś bardziej na zewnątrz
-
-    private Signature readSigFromFile(String filename)
-    {
-        Signature newSig = new Signature();
-
-        File mainDir = null;
-        try
-        {
-            mainDir = getFilePath();
-        } catch (OSVOMDStorageException e)
-        {
-            e.printStackTrace();
-        }
-
-        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
-
-        BufferedReader br = null;
-        try
-        {
-            br = new BufferedReader(new FileReader(filePath));
-            String line;
-            while((line = br.readLine()) != null)
-            {
-                String[] lines = line.split("\t");
-                if (lines.length == 4)
-                {
-                    newSig.addPoint(Long.parseLong(lines[0]), Double.parseDouble(lines[1]), Double.parseDouble(lines[2]), Double.parseDouble(lines[3]));
-                }
-            }
-            br.close();
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        return newSig;
-    }
-
     //TODO na razie publicznie wszystko
-    /*zapisuje plik z podpisem*/
+    /*zapisuje plik z podpisem o zadanej nazwie w domyślnym folderze publicznym*/
     private void writeSigToFile(String filename)
     {
         File mainDir = null;
@@ -435,7 +396,68 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    //TODO optymalizuj wyjątki dostępu do danych, gdzieś bardziej na zewnątrz
+    /*czyta i zwraca plik z podpisem o zadanej nazwie w domyślnym folderze publicznym*/
+    private Signature readSigFromFile(String filename)
+    {
+        File mainDir = null;
+        try
+        {
+            mainDir = getFilePath();
+        } catch (OSVOMDStorageException e)
+        {
+            e.printStackTrace();
+        }
 
+        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
+
+        FileInputStream fis = null;
+        Signature newSig = null;
+        try
+        {
+            File file = new File(filePath);
+            byte[] b = new byte[(int)file.length()];
+            fis = new FileInputStream(file);
+            fis.read(b);
+
+            newSig = new Signature(b);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if (fis != null)
+                    fis.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        /*BufferedReader br = null;
+        try
+        {
+            br = new BufferedReader(new FileReader(filePath));
+            String line;
+            while((line = br.readLine()) != null)
+            {
+                String[] lines = line.split("\t");
+                if (lines.length == 4)
+                {
+                    newSig.addPoint(Long.parseLong(lines[0]), Double.parseDouble(lines[1]), Double.parseDouble(lines[2]), Double.parseDouble(lines[3]));
+                }
+            }
+            br.close();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }*/
+        return newSig;
+    }
+
+    /*zapisuje obraz podpisu z NoteDocPage jako plik png o zadanej nazwie w folderze domyślnym publicznym*/
     private void captureSpenSurfaceView(String filename)
     {
         File mainDir = null;
@@ -482,6 +504,7 @@ public class MainActivity extends AppCompatActivity
         imgBitmap.recycle();
         Toast.makeText(mContext, filePath, Toast.LENGTH_LONG).show();
     }
+
 
     private File getFilePath() throws OSVOMDStorageException
     {
