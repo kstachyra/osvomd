@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Signature
 {
-    /*klasa reprezentująca jeden punkty podpisu (x, y, press, czas)*/
+    /*klasa reprezentująca jeden punkty podpisu (czas, x, y, press)*/
     class Point
     {
         double x;
@@ -19,7 +19,7 @@ public class Signature
         double press;
         long time;
 
-        Point (double x, double y, double press, long time)
+        Point (long time, double x, double y, double press)
         {
             this.x = x;
             this.y = y;
@@ -30,7 +30,7 @@ public class Signature
         @Override
         public String toString()
         {
-            return time + " " + x + " " + y + " " + press;
+            return time + "\t" + x + "\t" + y + "\t" + press;
         }
     }
 
@@ -43,9 +43,9 @@ public class Signature
         this.points = new LinkedList<Point>();
     }
 
-    void addPoint(double x, double y, double press, long time)
+    void addPoint(long time, double x, double y, double press)
     {
-        points.add(new Point(x, y, press, time));
+        points.add(new Point(time, x, y, press));
     }
 
     /*wyświetla w Log listę punktów podpisu*/

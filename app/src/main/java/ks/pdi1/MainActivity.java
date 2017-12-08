@@ -29,9 +29,13 @@ import com.samsung.android.sdk.pen.engine.SpenHoverListener;
 import com.samsung.android.sdk.pen.engine.SpenSurfaceView;
 import com.samsung.android.sdk.pen.engine.SpenTouchListener;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
@@ -72,7 +76,7 @@ public class MainActivity extends AppCompatActivity
             {
                 mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
                 Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
-                sig.addPoint(event.getX(), event.getY(), event.getPressure(), System.currentTimeMillis());
+                sig.addPoint(System.currentTimeMillis(), event.getX(), event.getY(), event.getPressure());
                 return true;
             }
             return false;
@@ -88,7 +92,7 @@ public class MainActivity extends AppCompatActivity
             {
                 mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
                 Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
-                sig.addPoint(event.getX(), event.getY(), event.getPressure(), System.currentTimeMillis());
+                sig.addPoint(System.currentTimeMillis(), event.getX(), event.getY(), event.getPressure());
                 return true;
             }
             return false;
@@ -104,8 +108,11 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
             sig.print();
 
-            captureSpenSurfaceView();
-            saveSigToFile();
+            captureSpenSurfaceView(sig.name);
+            writeSigToFile(sig.name);
+
+            //writeSigToFile("KK");
+            //captureSpenSurfaceView("KK");
 
 
 
@@ -133,7 +140,8 @@ public class MainActivity extends AppCompatActivity
         public void onClick(View v)
         {
             Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
-            sig.normalize();
+            //sig.normalize();
+            sig = readSigFromFile("KK");
         }
     };
 
@@ -349,24 +357,58 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    //TODO na razie publicznie wszystko
-    /*zapisuje plik z podpisem*/
-    private void saveSigToFile()
-    {
-        //lokalizacja
-        File fileCacheItem = Environment.getExternalStoragePublicDirectory(Constants.EX_PUB_DIR_PATH);
+    //TODO optymalizuj wyjątki dostępu do danych, gdzieś bardziej na zewnątrz
 
-        //twórz folder, jeśli go nie ma
-        if (!fileCacheItem.exists())
+    private Signature readSigFromFile(String filename)
+    {
+        Signature newSig = new Signature();
+
+        File mainDir = null;
+        try
         {
-            if (!fileCacheItem.mkdirs())
-            {
-                Toast.makeText(mContext, "Save Path Creation Error", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            mainDir = getFilePath();
+        } catch (OSVOMDStorageException e)
+        {
+            e.printStackTrace();
         }
 
-        String filePath = fileCacheItem.getAbsolutePath() + "/" + sig.name + ".txt";
+        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
+
+        BufferedReader br = null;
+        try
+        {
+            br = new BufferedReader(new FileReader(filePath));
+            String line;
+            while((line = br.readLine()) != null)
+            {
+                String[] lines = line.split("\t");
+                if (lines.length == 4)
+                {
+                    newSig.addPoint(Long.parseLong(lines[0]), Double.parseDouble(lines[1]), Double.parseDouble(lines[2]), Double.parseDouble(lines[3]));
+                }
+            }
+            br.close();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        return newSig;
+    }
+
+    //TODO na razie publicznie wszystko
+    /*zapisuje plik z podpisem*/
+    private void writeSigToFile(String filename)
+    {
+        File mainDir = null;
+        try
+        {
+            mainDir = getFilePath();
+        } catch (OSVOMDStorageException e)
+        {
+            e.printStackTrace();
+        }
+
+        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
 
         OutputStream out = null;
         try
@@ -394,23 +436,19 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void captureSpenSurfaceView()
+    private void captureSpenSurfaceView(String filename)
     {
-
-        // Select the location to save the image.
-        File fileCacheItem = Environment.getExternalStoragePublicDirectory(Constants.EX_PUB_DIR_PATH);
-
-        //twórz folder, jeśli go nie ma
-        if (!fileCacheItem.exists())
+        File mainDir = null;
+        try
         {
-            if (!fileCacheItem.mkdirs())
-            {
-                Toast.makeText(mContext, "Save Path Creation Error", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            mainDir = getFilePath();
+        } catch (OSVOMDStorageException e)
+        {
+            e.printStackTrace();
         }
 
-        String filePath = fileCacheItem.getAbsolutePath() + "/" + sig.name + ".png";
+
+        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".png";
         // Save the screen shot as a Bitmap.
         //Bitmap imgBitmap = mSpenSurfaceView.captureCurrentView(true);
         Bitmap imgBitmap = mSpenSurfaceView.capturePage(1);
@@ -443,6 +481,23 @@ public class MainActivity extends AppCompatActivity
 
         imgBitmap.recycle();
         Toast.makeText(mContext, filePath, Toast.LENGTH_LONG).show();
+    }
+
+    private File getFilePath() throws OSVOMDStorageException
+    {
+        // Select the location to save the image.
+        File fileCacheItem = Environment.getExternalStoragePublicDirectory(Constants.EX_PUB_DIR_PATH);
+
+        //twórz folder, jeśli go nie ma
+        if (!fileCacheItem.exists())
+        {
+            if (!fileCacheItem.mkdirs())
+            {
+                Toast.makeText(mContext, "Save Path Creation Error", Toast.LENGTH_SHORT).show();
+                throw new OSVOMDStorageException();
+            }
+        }
+        return fileCacheItem;
     }
 
     public int aa = 150;
