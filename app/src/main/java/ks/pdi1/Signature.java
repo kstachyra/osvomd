@@ -18,12 +18,12 @@ public class Signature
         double press;
         long time;
 
-        Point (double x, double y, double press)
+        Point (double x, double y, double press, long time)
         {
             this.x = x;
             this.y = y;
             this.press = press;
-            this.time = System.currentTimeMillis();
+            this.time = time;
         }
 
         @Override
@@ -42,9 +42,9 @@ public class Signature
         this.points = new LinkedList<Point>();
     }
 
-    void addPoint(double x, double y, double press)
+    void addPoint(double x, double y, double press, long time)
     {
-        points.add(new Point(x, y, press));
+        points.add(new Point(x, y, press, time));
     }
 
     /*wyświetla w Log listę punktów podpisu*/

@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity
             {
                 mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
                 Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
-                sig.addPoint(event.getX(), event.getY(), event.getPressure());
+                sig.addPoint(event.getX(), event.getY(), event.getPressure(), System.currentTimeMillis());
                 return true;
             }
             return false;
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity
             {
                 mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
                 Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
-                sig.addPoint(event.getX(), event.getY(), event.getPressure());
+                sig.addPoint(event.getX(), event.getY(), event.getPressure(), System.currentTimeMillis());
                 return true;
             }
             return false;
