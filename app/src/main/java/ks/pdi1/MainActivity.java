@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity
             sig.print();
 
             captureSpenSurfaceView();
+            saveSigToFile();
 
 
 
@@ -123,6 +124,8 @@ public class MainActivity extends AppCompatActivity
 
         }
     };
+
+
 
     private final View.OnClickListener button_WZListener = new View.OnClickListener()
     {
@@ -343,6 +346,50 @@ public class MainActivity extends AppCompatActivity
                 mSpenPageDoc.removeObject(stroke);
             }
             mSpenSurfaceView.update();
+        }
+    }
+
+    //TODO na razie publicznie wszystko
+    /*zapisuje plik z podpisem*/
+    private void saveSigToFile()
+    {
+        //lokalizacja
+        File fileCacheItem = Environment.getExternalStoragePublicDirectory(Constants.EX_PUB_DIR_PATH);
+
+        //twórz folder, jeśli go nie ma
+        if (!fileCacheItem.exists())
+        {
+            if (!fileCacheItem.mkdirs())
+            {
+                Toast.makeText(mContext, "Save Path Creation Error", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        String filePath = fileCacheItem.getAbsolutePath() + "/" + sig.name + ".txt";
+
+        OutputStream out = null;
+        try
+        {
+            out = new FileOutputStream(filePath);
+            out.write(sig.getSigBytes());
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        } finally
+        {
+            try
+            {
+                if (out != null)
+                {
+                    out.close();
+                }
+
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 

@@ -2,6 +2,7 @@ package ks.pdi1;
 
 import android.util.Log;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -10,7 +11,7 @@ import java.util.List;
 
 public class Signature
 {
-    /*klasa reprezentująca jeden punkty podpisu (czas, x, y, press)*/
+    /*klasa reprezentująca jeden punkty podpisu (x, y, press, czas)*/
     class Point
     {
         double x;
@@ -92,8 +93,24 @@ public class Signature
         }
     }
 
-    /*usuwa punkty z zerowym naciskiem na początku i na końcu podpisu
-    * podpis musi zawierać jakiekolwiek punkty*/
+    /*zwraca podpis jako pojedynczy string*/
+    public String getSigString()
+    {
+        String sigString = new String();
+        for (Point p : points)
+        {
+            sigString = sigString.concat(p.toString()).concat(System.lineSeparator());
+        }
+        return sigString;
+    }
+
+    /*zwraca podpis jako ciąg bajtów*/
+    public byte[] getSigBytes()
+    {
+        return this.getSigString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /*usuwa punkty z zerowym naciskiem na początku i na końcu podpisu*/
     private void clearBeginEnd()
     {
         while (points.size()>0 && points.get(0).press == 0.0)
@@ -135,7 +152,7 @@ public class Signature
         }
     }
 
-    /*ustawia czas względny*/
+    /*ustawia czas względny, względem pierwszego punktu*/
     private void reTime()
     {
         long firstPointTime = points.get(0).time;
