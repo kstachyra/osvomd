@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity
             sig.print();
 
             captureSpenSurfaceView(sig.name);
-            writeSigToFile(sig.name);
+            writeSigToFile(sig.name, sig.getSigBytes());
 
             //writeSigToFile("KK");
             //captureSpenSurfaceView("KK");
@@ -358,7 +358,7 @@ public class MainActivity extends AppCompatActivity
 
     //TODO na razie publicznie wszystko
     /*zapisuje plik z podpisem o zadanej nazwie w domyślnym folderze publicznym*/
-    private void writeSigToFile(String filename)
+    private void writeSigToFile(String filename, byte[] b)
     {
         File mainDir = null;
         try
@@ -375,7 +375,7 @@ public class MainActivity extends AppCompatActivity
         try
         {
             out = new FileOutputStream(filePath);
-            out.write(sig.getSigBytes());
+            out.write(b);
 
         } catch (Exception e)
         {
