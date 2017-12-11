@@ -54,6 +54,9 @@ public class MainActivity extends AppCompatActivity
     private static final Object lock = true;
 
     private static Signature sig;
+    private static Signature sig2;
+
+
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static final int BACKGROUND_LAYER = 42;
@@ -112,18 +115,18 @@ public class MainActivity extends AppCompatActivity
         {
 
             Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
+            Log.d("pdi.main", "DO PLIKU:");
             sig.print();
 
-            captureSpenSurfaceView(sig.name);
+            //captureSpenSurfaceView(sig.name);
 
-            /*try
+            try
             {
-                writeSigToFile(sig.name, sig.getSigBytes(), false);
-                writeSigToFile(sig.name + "_CRYPTO", sig.getSigBytes(), true);
+                writeSigToFile("KK", sig.getSigBytes(), true, true);
             } catch (Exception e)
             {
                 e.printStackTrace();
-            }*/
+            }
 
             //writeSigToFile("KK");
             //captureSpenSurfaceView("KK");
@@ -155,7 +158,18 @@ public class MainActivity extends AppCompatActivity
         {
             Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
             //sig.normalize();
-            
+
+            try
+            {
+                sig2 = readSigFromFile("KK", true, true);
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            Log.d("pdi.main", "Z PLIKU:");
+            sig2.print();
+
         }
     };
 
@@ -198,6 +212,7 @@ public class MainActivity extends AppCompatActivity
         mContext = this;
 
         sig = new Signature();
+        sig2 = new Signature();
 
         initSpen();
         addListeners();
@@ -374,7 +389,7 @@ public class MainActivity extends AppCompatActivity
         byte[] b = null;
         if (modePrivate)
         {
-            File file = new File(filename);
+            File file = new File(getFilesDir() + "/" + filename);
 
             b = new byte[(int) file.length()];
 

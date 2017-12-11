@@ -15,5 +15,5 @@ public class Constants
     public final static int ITERATIONS = 1000;
     public final static int KEY_LENGTH = 256;
 
-    public final static String APK_CONSTANT = "apk_constant";
+    public final static String APK_CONSTANT = "asdkl;";
 }
