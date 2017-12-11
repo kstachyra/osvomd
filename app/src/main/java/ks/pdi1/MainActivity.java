@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity
     private static final Object lock = true;
 
     private static Signature sig;
-    private static Signature sig2;
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static final int BACKGROUND_LAYER = 42;
@@ -63,9 +62,6 @@ public class MainActivity extends AppCompatActivity
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-
-    /*część okna przeznaczona na podpis*/
-    private static final double SIZE = 0.8f;
 
     /*this context*/
     private Context mContext;
@@ -117,19 +113,17 @@ public class MainActivity extends AppCompatActivity
 
             Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
             sig.print();
-            Log.d("pdi.main", "_______________________________");
-            sig2.print();
 
             captureSpenSurfaceView(sig.name);
 
-            try
+            /*try
             {
-                writeSigToFile("KK", sig.getSigBytes());
-                writeSigToFile("KK" + "_CRYPT", sig.getSigBytes(), true);
+                writeSigToFile(sig.name, sig.getSigBytes(), false);
+                writeSigToFile(sig.name + "_CRYPTO", sig.getSigBytes(), true);
             } catch (Exception e)
             {
                 e.printStackTrace();
-            }
+            }*/
 
             //writeSigToFile("KK");
             //captureSpenSurfaceView("KK");
@@ -161,15 +155,7 @@ public class MainActivity extends AppCompatActivity
         {
             Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
             //sig.normalize();
-
-            try
-            {
-                sig = readSigFromFile("KK");
-                sig2 = readSigFromFile("KK" + "_CRYPT", true);
-            } catch (Exception e)
-            {
-                e.printStackTrace();
-            }
+            
         }
     };
 
@@ -180,7 +166,6 @@ public class MainActivity extends AppCompatActivity
         {
             Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
             clearCurrentSig();
-            sig2.clear();
 
             /*synchronized (lock)
             {
@@ -213,34 +198,11 @@ public class MainActivity extends AppCompatActivity
         mContext = this;
 
         sig = new Signature();
-        sig2 = new Signature();
 
         initSpen();
         addListeners();
 
     }
-
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-    }
-
-    @Override
-    protected void onPause()
-    {
-        super.onPause();
-        //thread.interrupt();
-    }
-
-    @Override
-    protected void onStop()
-    {
-        super.onStop();
-        //finish();
-    }
-
 
     @Override
     protected void onDestroy()
@@ -387,78 +349,51 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    //TODO na razie publicznie wszystko
-
-    /*zapisuje plik z podpisem o zadanej nazwie w domyślnym folderze publicznym*/
-    private void writeSigToFile(String filename, byte[] b) throws OSVOMDStorageException, IOException, Exception
+    private void writeSigToFile(String filename, byte[] sigBytes, boolean encrypted, boolean modePrivate) throws OSVOMDStorageException, IOException, Exception
     {
-        File mainDir = null;
-        mainDir = getFilePath();
+        if (encrypted) sigBytes = encrypt(getCryptoKey(), sigBytes);
 
-        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
-
-        OutputStream out = null;
-
-        out = new FileOutputStream(filePath);
-        out.write(b);
-
-        out.close();
-    }
-
-    /*zapisuje plik z podpisem o zadanej nazwie w domyślnym folderze publicznym, zaszyfrowany*/
-    private void writeSigToFile(String filename, byte[] b, boolean encrypted) throws OSVOMDStorageException, IOException, Exception
-    {
-        if (encrypted) b = encrypt(getKey(), b);
-        writeSigToFile(filename, b);
-    }
-
-    private SecretKey getKey()
-    {
-        try
+        FileOutputStream fos = null;
+        if (modePrivate)
         {
-            return generateKey(Settings.Secure.ANDROID_ID, APK_CONSTANT);
-        } catch (NoSuchAlgorithmException e)
-        {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e)
-        {
-            e.printStackTrace();
+            fos = openFileOutput(filename, Context.MODE_PRIVATE);
         }
-        return null;
+        else
+        {
+            File mainDir = getFilePath();
+            String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
+            fos = new FileOutputStream(filePath);
+        }
+        fos.write(sigBytes);
+        fos.close();
     }
 
-    /*czyta i zwraca plik z podpisem o zadanej nazwie w domyślnym folderze publicznym*/
-    private Signature readSigFromFile(String filename) throws OSVOMDStorageException, IOException, Exception
+    private Signature readSigFromFile(String filename, boolean encrypted, boolean modePrivate) throws OSVOMDStorageException, IOException, Exception
     {
-        File mainDir = getFilePath();
+        FileInputStream fis = null;
+        byte[] b = null;
+        if (modePrivate)
+        {
+            File file = new File(filename);
 
-        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
+            b = new byte[(int) file.length()];
 
-        File file = new File(filePath);
-        byte[] b = new byte[(int)file.length()];
-        FileInputStream fis = new FileInputStream(file);
+            fis = openFileInput(filename);
+        }
+        else
+        {
+            File mainDir = getFilePath();
+            String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
+            File file = new File(filePath);
+
+            b = new byte[(int) file.length()];
+
+            fis = new FileInputStream(file);
+        }
+
         fis.read(b);
 
-        Signature newSig = new Signature(b);
-
-        if (fis != null) fis.close();
-
-        return newSig;
-    }
-
-    /*czyta i zwraca plik z podpisem o zadanej nazwie w domyślnym folderze publicznym, z moliwością zaszyfrowania*/
-    private Signature readSigFromFile(String filename, boolean encrypted) throws OSVOMDStorageException, IOException, Exception
-    {
-        File mainDir = getFilePath();
-
-        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
-
-        File file = new File(filePath);
-        byte[] b = new byte[(int)file.length()];
-        FileInputStream fis = new FileInputStream(file);
-        fis.read(b);
-
-        if (encrypted) b = decrypt(getKey(), b);
+        if (encrypted) b = decrypt(getCryptoKey(), b);
 
         Signature newSig = new Signature(b);
 
@@ -557,6 +492,21 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+    private SecretKey getCryptoKey()
+    {
+        try
+        {
+            return generateKey(Settings.Secure.ANDROID_ID, APK_CONSTANT);
+        } catch (NoSuchAlgorithmException e)
+        {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
 
 
@@ -584,11 +534,11 @@ public class MainActivity extends AppCompatActivity
             SpenControlBase control = mSpenSurfaceView.getControl();
             if (control == null)
             {
-// Set Bitmap file for ObjectImage.
+                    // Set Bitmap file for ObjectImage.
                     SpenObjectImage imgObj = new SpenObjectImage();
                     Bitmap imageBitmap = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.ic_action_name);
                     imgObj.setImage(imageBitmap);
-// Set the position of ObjectImage and add it to PageDoc.
+                    // Set the position of ObjectImage and add it to PageDoc.
 
 
 

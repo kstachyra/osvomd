@@ -1,16 +1,15 @@
 package ks.pdi1;
 
-import android.os.Environment;
-
-import java.nio.charset.StandardCharsets;
-
 public class Constants
 {
+    /*część okna przeznaczona na podpis*/
+    public static final double SIZE = 0.8f;
+
+    /*nazwa publicznego folderu aplikacji*/
     public final static String EX_PUB_DIR_PATH = "/OSVOMD";
 
-    /*stopień kompresji obrazów PNG podpisu 0 (MAX compression) - 100 (LEAST cmpression)*/
+    /*stopień kompresji obrazów PNG podpisu 0 (MAX compression) - 100 (MIN compression)*/
     public final static int COMPRESS = 50;
-
 
     /*Crypto*/
     public final static int ITERATIONS = 1000;
