@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import static ks.pdi1.Crypto.*;
+
 public class Signature
 {
     /*klasa reprezentująca jeden punkty podpisu (czas, x, y, press)*/
@@ -191,4 +193,5 @@ public class Signature
             }
         }
     }
+
 }

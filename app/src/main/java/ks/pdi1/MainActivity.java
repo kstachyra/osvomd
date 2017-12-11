@@ -1,5 +1,8 @@
 package ks.pdi1;
 
+import static ks.pdi1.Constants.*;
+import static ks.pdi1.Crypto.*;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -10,6 +13,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Environment;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,28 +26,35 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.samsung.android.sdk.SsdkUnsupportedException;
-import com.samsung.android.sdk.pen.*;
-import com.samsung.android.sdk.pen.document.*;
+import com.samsung.android.sdk.pen.Spen;
+import com.samsung.android.sdk.pen.document.SpenNoteDoc;
+import com.samsung.android.sdk.pen.document.SpenObjectBase;
+import com.samsung.android.sdk.pen.document.SpenObjectImage;
+import com.samsung.android.sdk.pen.document.SpenPageDoc;
 import com.samsung.android.sdk.pen.engine.SpenControlBase;
 import com.samsung.android.sdk.pen.engine.SpenHoverListener;
 import com.samsung.android.sdk.pen.engine.SpenSurfaceView;
 import com.samsung.android.sdk.pen.engine.SpenTouchListener;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+
+import javax.crypto.SecretKey;
+
+
 
 public class MainActivity extends AppCompatActivity
 {
     private static final Object lock = true;
 
     private static Signature sig;
+    private static Signature sig2;
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static final int BACKGROUND_LAYER = 42;
@@ -106,9 +117,19 @@ public class MainActivity extends AppCompatActivity
 
             Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
             sig.print();
+            Log.d("pdi.main", "_______________________________");
+            sig2.print();
 
             captureSpenSurfaceView(sig.name);
-            writeSigToFile(sig.name, sig.getSigBytes());
+
+            try
+            {
+                writeSigToFile("KK", sig.getSigBytes());
+                writeSigToFile("KK" + "_CRYPT", sig.getSigBytes(), true);
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
 
             //writeSigToFile("KK");
             //captureSpenSurfaceView("KK");
@@ -140,7 +161,15 @@ public class MainActivity extends AppCompatActivity
         {
             Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
             //sig.normalize();
-            sig = readSigFromFile("KK");
+
+            try
+            {
+                sig = readSigFromFile("KK");
+                sig2 = readSigFromFile("KK" + "_CRYPT", true);
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         }
     };
 
@@ -151,6 +180,7 @@ public class MainActivity extends AppCompatActivity
         {
             Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
             clearCurrentSig();
+            sig2.clear();
 
             /*synchronized (lock)
             {
@@ -183,6 +213,7 @@ public class MainActivity extends AppCompatActivity
         mContext = this;
 
         sig = new Signature();
+        sig2 = new Signature();
 
         initSpen();
         addListeners();
@@ -357,103 +388,82 @@ public class MainActivity extends AppCompatActivity
     }
 
     //TODO na razie publicznie wszystko
+
     /*zapisuje plik z podpisem o zadanej nazwie w domyślnym folderze publicznym*/
-    private void writeSigToFile(String filename, byte[] b)
+    private void writeSigToFile(String filename, byte[] b) throws OSVOMDStorageException, IOException, Exception
     {
         File mainDir = null;
-        try
-        {
-            mainDir = getFilePath();
-        } catch (OSVOMDStorageException e)
-        {
-            e.printStackTrace();
-        }
+        mainDir = getFilePath();
 
         String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
 
         OutputStream out = null;
-        try
-        {
-            out = new FileOutputStream(filePath);
-            out.write(b);
 
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-        } finally
-        {
-            try
-            {
-                if (out != null)
-                {
-                    out.close();
-                }
+        out = new FileOutputStream(filePath);
+        out.write(b);
 
-            } catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        out.close();
     }
 
-    //TODO optymalizuj wyjątki dostępu do danych, gdzieś bardziej na zewnątrz
-    /*czyta i zwraca plik z podpisem o zadanej nazwie w domyślnym folderze publicznym*/
-    private Signature readSigFromFile(String filename)
+    /*zapisuje plik z podpisem o zadanej nazwie w domyślnym folderze publicznym, zaszyfrowany*/
+    private void writeSigToFile(String filename, byte[] b, boolean encrypted) throws OSVOMDStorageException, IOException, Exception
     {
-        File mainDir = null;
+        if (encrypted) b = encrypt(getKey(), b);
+        writeSigToFile(filename, b);
+    }
+
+    private SecretKey getKey()
+    {
         try
         {
-            mainDir = getFilePath();
-        } catch (OSVOMDStorageException e)
+            return generateKey(Settings.Secure.ANDROID_ID, APK_CONSTANT);
+        } catch (NoSuchAlgorithmException e)
+        {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e)
         {
             e.printStackTrace();
         }
+        return null;
+    }
+
+    /*czyta i zwraca plik z podpisem o zadanej nazwie w domyślnym folderze publicznym*/
+    private Signature readSigFromFile(String filename) throws OSVOMDStorageException, IOException, Exception
+    {
+        File mainDir = getFilePath();
 
         String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
 
-        FileInputStream fis = null;
-        Signature newSig = null;
-        try
-        {
-            File file = new File(filePath);
-            byte[] b = new byte[(int)file.length()];
-            fis = new FileInputStream(file);
-            fis.read(b);
+        File file = new File(filePath);
+        byte[] b = new byte[(int)file.length()];
+        FileInputStream fis = new FileInputStream(file);
+        fis.read(b);
 
-            newSig = new Signature(b);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            try
-            {
-                if (fis != null)
-                    fis.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-        /*BufferedReader br = null;
-        try
-        {
-            br = new BufferedReader(new FileReader(filePath));
-            String line;
-            while((line = br.readLine()) != null)
-            {
-                String[] lines = line.split("\t");
-                if (lines.length == 4)
-                {
-                    newSig.addPoint(Long.parseLong(lines[0]), Double.parseDouble(lines[1]), Double.parseDouble(lines[2]), Double.parseDouble(lines[3]));
-                }
-            }
-            br.close();
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }*/
+        Signature newSig = new Signature(b);
+
+        if (fis != null) fis.close();
+
+        return newSig;
+    }
+
+    /*czyta i zwraca plik z podpisem o zadanej nazwie w domyślnym folderze publicznym, z moliwością zaszyfrowania*/
+    private Signature readSigFromFile(String filename, boolean encrypted) throws OSVOMDStorageException, IOException, Exception
+    {
+        File mainDir = getFilePath();
+
+        String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
+
+        File file = new File(filePath);
+        byte[] b = new byte[(int)file.length()];
+        FileInputStream fis = new FileInputStream(file);
+        fis.read(b);
+
+        if (encrypted) b = decrypt(getKey(), b);
+
+        Signature newSig = new Signature(b);
+
+        if (fis != null) fis.close();
+
         return newSig;
     }
 
@@ -481,7 +491,7 @@ public class MainActivity extends AppCompatActivity
         {
         // Save the Bitmap in the selected location.
             out = new FileOutputStream(filePath);
-            imgBitmap.compress(Bitmap.CompressFormat.PNG, Constants.COMPRESS, out);
+            imgBitmap.compress(Bitmap.CompressFormat.PNG, COMPRESS, out);
 
         } catch (Exception e)
         {
@@ -509,7 +519,7 @@ public class MainActivity extends AppCompatActivity
     private File getFilePath() throws OSVOMDStorageException
     {
         // Select the location to save the image.
-        File fileCacheItem = Environment.getExternalStoragePublicDirectory(Constants.EX_PUB_DIR_PATH);
+        File fileCacheItem = Environment.getExternalStoragePublicDirectory(EX_PUB_DIR_PATH);
 
         //twórz folder, jeśli go nie ma
         if (!fileCacheItem.exists())
