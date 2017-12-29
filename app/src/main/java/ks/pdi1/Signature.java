@@ -36,6 +36,7 @@ public class Signature
         }
     }
 
+    String ID;
     String name;
     public List<Point> points;
 
@@ -177,6 +178,7 @@ public class Signature
         Date currentDate = Calendar.getInstance().getTime();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss");
         String stringDate = formatter.format(currentDate);
+        stringDate = ID + stringDate;
         return stringDate;
     }
 
@@ -192,6 +194,12 @@ public class Signature
                 this.addPoint(Long.parseLong(values[0]), Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3]));
             }
         }
+    }
+
+    public void addID(String id)
+    {
+        this.ID = id;
+        rename();
     }
 
 }

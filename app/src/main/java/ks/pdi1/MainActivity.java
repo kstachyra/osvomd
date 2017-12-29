@@ -5,7 +5,9 @@ import static ks.pdi1.Crypto.*;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -17,11 +19,13 @@ import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -53,9 +57,8 @@ public class MainActivity extends AppCompatActivity
 {
     private static final Object lock = true;
 
+    private String ID = "";
     private static Signature sig;
-    private static Signature sig2;
-
 
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -114,15 +117,16 @@ public class MainActivity extends AppCompatActivity
         public void onClick(View v)
         {
 
-            Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
-            Log.d("pdi.main", "DO PLIKU:");
-            sig.print();
-
+            //Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
             //captureSpenSurfaceView(sig.name);
 
             try
             {
-                writeSigToFile("KK", sig.getSigBytes(), true, true);
+                writeSigToFile(sig.name + "_RAW", sig.getSigBytes(), false, false);
+                sig.normalize();
+                writeSigToFile(sig.name, sig.getSigBytes(), false, false);
+                captureSpenSurfaceView(sig.name);
+                clearCurrentSig();
             } catch (Exception e)
             {
                 e.printStackTrace();
@@ -149,36 +153,62 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-
-
     private final View.OnClickListener button_WZListener = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
         {
-            Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
+            //Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
             //sig.normalize();
+
+            showDialogWindow();
+            sig.addID(ID);
 
             try
             {
-                sig2 = readSigFromFile("KK", true, true);
+                //sig2 = readSigFromFile("KK", true, true);
             } catch (Exception e)
             {
                 e.printStackTrace();
             }
 
-            Log.d("pdi.main", "Z PLIKU:");
-            sig2.print();
-
         }
     };
+
+    /* wyświetla okno dialogowe, i przypisuje wpisaną wartość*/
+    private void showDialogWindow()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Signature ID");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                ID = input.getText().toString();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
 
     private final View.OnClickListener button_CLRListener = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
         {
-            Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
+            //Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
             clearCurrentSig();
 
             /*synchronized (lock)
@@ -212,7 +242,6 @@ public class MainActivity extends AppCompatActivity
         mContext = this;
 
         sig = new Signature();
-        sig2 = new Signature();
 
         initSpen();
         addListeners();
@@ -364,6 +393,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /* zapisuje obecny podpis do pliku, z opcją szyfrowania, MODE_PRIVATE*/
     private void writeSigToFile(String filename, byte[] sigBytes, boolean encrypted, boolean modePrivate) throws OSVOMDStorageException, IOException, Exception
     {
         if (encrypted) sigBytes = encrypt(getCryptoKey(), sigBytes);
@@ -383,6 +413,7 @@ public class MainActivity extends AppCompatActivity
         fos.close();
     }
 
+    /* czyta podpis z pliku, z możliwością szyfrowania, MODE_PRIVATE*/
     private Signature readSigFromFile(String filename, boolean encrypted, boolean modePrivate) throws OSVOMDStorageException, IOException, Exception
     {
         FileInputStream fis = null;
@@ -462,10 +493,9 @@ public class MainActivity extends AppCompatActivity
         }
 
         imgBitmap.recycle();
-        Toast.makeText(mContext, filePath, Toast.LENGTH_LONG).show();
     }
 
-
+    /*zwraca domyślną lokalizację*/
     private File getFilePath() throws OSVOMDStorageException
     {
         // Select the location to save the image.
