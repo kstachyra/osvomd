@@ -9,10 +9,6 @@ import android.util.Log;
  * get ACCUMULATED-DISTANCE. This accumulated distance is basically the distance
  * between two time series. The original implementation only returns the warping
  * distance.
- * <pre>
- *   X = x1, x2,..., xi,..., xn
- *   Y = y1, y2,..., yj,..., ym
- *  </pre>
  *
  * @author Cheol-Woo Jung (cjung@gatech.edu) Modified: Muhammad Muaaz
  * @version 1.0
@@ -144,21 +140,11 @@ public class DTW <T extends DTW.Distancable>
         warpingPath = newPath;
     }
 
-    /**
-     * Returns the warping distance
-     *
-     * @return
-     */
     public double getWarpingDistance()
     {
         return warpingDistance;
     }
 
-    /**
-     * Returns the warping distance
-     *
-     * @return
-     */
     public double getAccumulatedDistance()
     {
         return accumulatedDist;
@@ -202,9 +188,6 @@ public class DTW <T extends DTW.Distancable>
         return retVal;
     }
 
-    /**
-     * Tests functionality of this class
-     */
     public static void test()
     {
         Point[] n2 = {new Point(0, 1, 2, 3), new Point(5, 5, 5, 5)};

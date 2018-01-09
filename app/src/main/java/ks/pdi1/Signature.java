@@ -11,18 +11,20 @@ import java.util.List;
 
 public class Signature
 {
-
-    String ID;
+    /* nazwa podpisu, zawierająca ID oraz dokładną datę*/
     String name;
-    public List<Point> points;
+    /* ID podpisu dla rozróżnienia wykonującego*/
+    private String ID = "defaultSigId";
+    /*lista punktów podpisu (time, x, y, press)*/
+    private List<Point> points;
 
-    Signature()
+    public Signature()
     {
         this.name = rename();
         this.points = new LinkedList<Point>();
     }
 
-    Signature (byte[] b)
+    public Signature (byte[] b)
     {
         this.name = rename();
         this.points = new LinkedList<Point>();
@@ -30,18 +32,47 @@ public class Signature
         getDataFromBytes(b);
     }
 
-    void addPoint(long time, double x, double y, double press)
+    /**z listy podpisów tworzy jeden wzorzec
+     * IPPA algorithm
+     * @param signatures
+     * @return hiddenSignature
+     */
+    static public Signature patternSignature(List<Signature> signatures)
     {
-        points.add(new Point(time, x, y, press));
+        Signature pattern = new Signature();
+
+        //TODO
+
+        return pattern;
     }
 
-    /*wyświetla w Log listę punktów podpisu*/
-    public void print()
+    /**porównuje dwa podpisy
+     *
+     * @param sig1
+     * @param sig2
+     * @return comaprison value (more -> more different signatures)
+     */
+    static public double compare(Signature sig1, Signature sig2)
     {
-        for (Point p : points)
-        {
-            Log.d("pdi.signature", p.toString());
-        }
+        double value = Double.MAX_VALUE;
+        //TODO
+        return value;
+    }
+
+    /**porównuje obecny podpis z podanym w parametrze
+     *
+     * @param other signature
+     * @return omaprison value (more -> more different signatures)
+     */
+    public double compareTo(Signature other)
+    {
+        return Signature.compare(this, other);
+    }
+
+    /**dodaje punkt do podpisu*/
+    public void addPoint(long time, double x, double y, double press)
+    {
+        points.add(new Point(time, x, y, press));
     }
 
     /*przekształca surowy zbiór punktów na znormalizowany*/
@@ -66,22 +97,8 @@ public class Signature
         }
     }
 
-    /*zeruje obecny podpis*/
-    public void clear()
-    {
-        try
-        {
-            rename();
-            points.clear();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     /*zwraca podpis jako pojedynczy string*/
-    public String getSigString()
+    private String getSigString()
     {
         String sigString = new String();
         for (Point p : points)
@@ -89,48 +106,6 @@ public class Signature
             sigString = sigString.concat(p.toString()).concat(System.lineSeparator());
         }
         return sigString;
-    }
-
-    /*zwraca podpis jako ciąg bajtów*/
-    public byte[] getSigBytes()
-    {
-        return this.getSigString().getBytes(StandardCharsets.UTF_8);
-    }
-
-    /*zwraca tablice double[] położenia X*/
-    public double[] getXArray()
-    {
-        double[] res = new double[points.size()];
-
-        for (int i=0; i<points.size(); ++i)
-        {
-            res[i] = points.get(i).x;
-        }
-        return res;
-    }
-
-    /*zwraca tablice double[] położenia Y*/
-    public double[] getYArray()
-    {
-        double[] res = new double[points.size()];
-
-        for (int i=0; i<points.size(); ++i)
-        {
-            res[i] = points.get(i).y;
-        }
-        return res;
-    }
-
-    /*zwraca tablice double[] położenia X*/
-    public double[] getPressArray()
-    {
-        double[] res = new double[points.size()];
-
-        for (int i=0; i<points.size(); ++i)
-        {
-            res[i] = points.get(i).press;
-        }
-        return res;
     }
 
     /*usuwa punkty z zerowym naciskiem na początku i na końcu podpisu*/
@@ -185,6 +160,7 @@ public class Signature
         }
     }
 
+    /*zmienia nazwę podpisu na zgodną z aktualnym ID i datą*/
     private String rename()
     {
         Date currentDate = Calendar.getInstance().getTime();
@@ -195,6 +171,27 @@ public class Signature
         return stringDate;
     }
 
+    /*zeruje obecny podpis*/
+    public void clear()
+    {
+        try
+        {
+            rename();
+            points.clear();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    /*zwraca podpis jako ciąg bajtów*/
+    public byte[] getSigBytes()
+    {
+        return this.getSigString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /*ustawia punkty podpisu na podstawie danych z tablicy bajtów (zgodnie z getSigBytes*/
     private void getDataFromBytes(byte[] b)
     {
         String sigString = new String(b, StandardCharsets.UTF_8);
@@ -209,10 +206,19 @@ public class Signature
         }
     }
 
-    public void addID(String id)
+    /*wyświetla w Log listę punktów podpisu*/
+    public void print()
+    {
+        for (Point p : points)
+        {
+            Log.d("pdi.signature", p.toString());
+        }
+    }
+
+
+    public void setID(String id)
     {
         this.ID = id;
         rename();
     }
-
 }

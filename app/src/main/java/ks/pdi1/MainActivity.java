@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity
 
             try
             {
-                sig.addID(ID);
+                sig.setID(ID);
                 writeSigToFile(sig.name + "_RAW", sig.getSigBytes(), false, false);
                 sig.normalize();
                 writeSigToFile(sig.name, sig.getSigBytes(), false, false);
