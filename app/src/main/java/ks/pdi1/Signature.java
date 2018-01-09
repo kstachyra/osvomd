@@ -95,7 +95,7 @@ public class Signature
     {
         try
         {
-            name = rename();
+            rename();
             points.clear();
         }
         catch (Exception e)
@@ -179,6 +179,7 @@ public class Signature
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss");
         String stringDate = formatter.format(currentDate);
         stringDate = ID + stringDate;
+        name = stringDate;
         return stringDate;
     }
 

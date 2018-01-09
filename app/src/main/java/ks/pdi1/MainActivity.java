@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity
 {
     private static final Object lock = true;
 
-    private String ID = "";
+    private static String ID = "_";
     private static Signature sig;
 
 
@@ -122,6 +122,7 @@ public class MainActivity extends AppCompatActivity
 
             try
             {
+                sig.addID(ID);
                 writeSigToFile(sig.name + "_RAW", sig.getSigBytes(), false, false);
                 sig.normalize();
                 writeSigToFile(sig.name, sig.getSigBytes(), false, false);
@@ -162,7 +163,6 @@ public class MainActivity extends AppCompatActivity
             //sig.normalize();
 
             showDialogWindow();
-            sig.addID(ID);
 
             try
             {
@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    /* wyświetla okno dialogowe, i przypisuje wpisaną wartość*/
+    /* wyświetla okno dialogowe, i przypisuje wpisaną wartość do zmiennej ID*/
     private void showDialogWindow()
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
