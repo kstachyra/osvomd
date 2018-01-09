@@ -11,9 +11,7 @@ import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.Environment;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
@@ -33,9 +31,7 @@ import com.samsung.android.sdk.SsdkUnsupportedException;
 import com.samsung.android.sdk.pen.Spen;
 import com.samsung.android.sdk.pen.document.SpenNoteDoc;
 import com.samsung.android.sdk.pen.document.SpenObjectBase;
-import com.samsung.android.sdk.pen.document.SpenObjectImage;
 import com.samsung.android.sdk.pen.document.SpenPageDoc;
-import com.samsung.android.sdk.pen.engine.SpenControlBase;
 import com.samsung.android.sdk.pen.engine.SpenHoverListener;
 import com.samsung.android.sdk.pen.engine.SpenSurfaceView;
 import com.samsung.android.sdk.pen.engine.SpenTouchListener;
@@ -245,7 +241,28 @@ public class MainActivity extends AppCompatActivity
 
         initSpen();
         addListeners();
+        initDTW();
 
+    }
+
+    private void initDTW()
+    {
+        /*double[] k = new double[5];
+        double[] s = new double[6];
+
+        for (int i=0; i<k.length; ++i)
+        {
+            k[i] = i+i*0.5;
+        }
+
+        for (int i=0; i<s.length; ++i)
+        {
+            s[i] = i;
+        }
+
+        Log.d("pdi.DW", String.valueOf(DynamicTimeWarping.d(k, s, 20)));*/
+
+        DTW.test();
     }
 
     @Override
@@ -513,30 +530,6 @@ public class MainActivity extends AppCompatActivity
         return fileCacheItem;
     }
 
-    public int aa = 150;
-    public int bb = 150;
-
-    Thread thread = new Thread() {
-        @Override
-        public void run() {
-            try {
-                while(true) {
-
-
-
-
-                    sleep(200);
-                    drawPoint(mSpenSurfaceView, aa, bb, 0.5f, BACKGROUND_LAYER);
-
-                    aa += 2;
-                    bb+= 1;
-                }
-            } catch (InterruptedException e) {
-                Log.d("pdi.thread", "przerwano wątek", e);
-            }
-        }
-    };
-
     private SecretKey getCryptoKey()
     {
         try
@@ -551,10 +544,6 @@ public class MainActivity extends AppCompatActivity
         }
         return null;
     }
-
-
-
-
 
     public static void verifyStoragePermissions(Activity activity) {
 
@@ -574,7 +563,7 @@ public class MainActivity extends AppCompatActivity
 
 
 
-    public boolean drawPoint(View view, float x, float y, float press, int layerId)
+    /*public boolean drawPoint(View view, float x, float y, float press, int layerId)
     {
             SpenControlBase control = mSpenSurfaceView.getControl();
             if (control == null)
@@ -617,10 +606,29 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    public int aa = 150;
+    public int bb = 150;
+
+    Thread thread = new Thread() {
+        @Override
+        public void run() {
+            try {
+                while(true) {
 
 
 
 
+                    sleep(200);
+                    drawPoint(mSpenSurfaceView, aa, bb, 0.5f, BACKGROUND_LAYER);
+
+                    aa += 2;
+                    bb+= 1;
+                }
+            } catch (InterruptedException e) {
+                Log.d("pdi.thread", "przerwano wątek", e);
+            }
+        }
+    };*/
 
 }
 
