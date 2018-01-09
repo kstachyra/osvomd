@@ -9,32 +9,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import static ks.pdi1.Crypto.*;
-
 public class Signature
 {
-    /*klasa reprezentująca jeden punkty podpisu (czas, x, y, press)*/
-    class Point
-    {
-        double x;
-        double y;
-        double press;
-        long time;
-
-        Point (long time, double x, double y, double press)
-        {
-            this.x = x;
-            this.y = y;
-            this.press = press;
-            this.time = time;
-        }
-
-        @Override
-        public String toString()
-        {
-            return time + "\t" + x + "\t" + y + "\t" + press;
-        }
-    }
 
     String ID;
     String name;
@@ -119,6 +95,42 @@ public class Signature
     public byte[] getSigBytes()
     {
         return this.getSigString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /*zwraca tablice double[] położenia X*/
+    public double[] getXArray()
+    {
+        double[] res = new double[points.size()];
+
+        for (int i=0; i<points.size(); ++i)
+        {
+            res[i] = points.get(i).x;
+        }
+        return res;
+    }
+
+    /*zwraca tablice double[] położenia Y*/
+    public double[] getYArray()
+    {
+        double[] res = new double[points.size()];
+
+        for (int i=0; i<points.size(); ++i)
+        {
+            res[i] = points.get(i).y;
+        }
+        return res;
+    }
+
+    /*zwraca tablice double[] położenia X*/
+    public double[] getPressArray()
+    {
+        double[] res = new double[points.size()];
+
+        for (int i=0; i<points.size(); ++i)
+        {
+            res[i] = points.get(i).press;
+        }
+        return res;
     }
 
     /*usuwa punkty z zerowym naciskiem na początku i na końcu podpisu*/

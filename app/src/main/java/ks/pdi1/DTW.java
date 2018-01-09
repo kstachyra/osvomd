@@ -17,11 +17,11 @@ import android.util.Log;
  * @author Cheol-Woo Jung (cjung@gatech.edu) Modified: Muhammad Muaaz
  * @version 1.0
  */
-public class DTW
+public class DTW <T extends DTW.Distancable>
 {
 
-    protected double[] seq1;
-    protected double[] seq2;
+    protected T[] seq1;
+    protected T[] seq2;
     protected int[][] warpingPath;
 
     protected int n;
@@ -31,7 +31,7 @@ public class DTW
     protected double warpingDistance;
     protected double accumulatedDist;
 
-    public DTW(double[] sample, double[] templete)
+    public DTW(T[] sample, T[] templete)
     {
         seq1 = sample;
         seq2 = templete;
@@ -58,7 +58,7 @@ public class DTW
         {
             for (int j = 0; j < m; j++)
             {
-                d[i][j] = distanceBetween(seq1[i], seq2[j]);
+                d[i][j] = seq1[i].distance(seq2[j]);
             }
         }
 
@@ -165,18 +165,6 @@ public class DTW
     }
 
     /**
-     * Computes a distance between two points
-     *
-     * @param p1 the point 1
-     * @param p2 the point 2
-     * @return the distance between two points
-     */
-    protected double distanceBetween(double p1, double p2)
-    {
-        return (p1 - p2) * (p1 - p2);
-    }
-
-    /**
      * Finds the index of the minimum element from the given array
      *
      * @param array the array containing numeric values
@@ -216,15 +204,14 @@ public class DTW
 
     /**
      * Tests functionality of this class
-     *
      */
     public static void test()
     {
-        double[] n2 = {1.5, 3.9, 4.1, 3.3, 2.1, 2.45, 3.673};
-        double[] n1 = {2.1, 2.45, 3.673, 4.32, 2.05, 1.93, 5.67, 6.01};
+        Point[] n2 = {new Point(0, 1, 2, 3), new Point(5, 5, 5, 5)};
+        Point[] n1 = {new Point(0, 1, 2, 3), new Point(10, 11, 12, 18)};
         DTW dtw = new DTW(n1, n2);
 
-        for (int i=0; i<dtw.warpingPath.length; ++i)
+        /*for (int i=0; i<dtw.warpingPath.length; ++i)
         {
             for (int j=0; j<dtw.warpingPath[i].length; ++j)
             {
@@ -233,6 +220,15 @@ public class DTW
         }
 
         Log.d("pdi.DTW","Accumulated distance between the series is :  " + dtw.getAccumulatedDistance());
-        Log.d("pdi.DTW","Warping Distance is between the series is :  " + dtw.getWarpingDistance());
+        Log.d("pdi.DTW","Warping Distance is between the series is :  " + dtw.getWarpingDistance());*/
+        Log.d("pdi.DTW", dtw.toString());
+    }
+
+    /**
+     * interface for measure distance between two objects of the same type
+     */
+    public interface Distancable<T extends Distancable>
+    {
+        public double distance(T other);
     }
 }
