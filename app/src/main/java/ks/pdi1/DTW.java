@@ -192,7 +192,7 @@ public class DTW <T extends DTW.Distancable>
     {
         Point[] n2 = {new Point(0, 1, 2, 3), new Point(5, 5, 5, 5)};
         Point[] n1 = {new Point(0, 1, 2, 3), new Point(0, 1, 2, 3), new Point(0, 1, 2, 3), new Point(5, 5, 5, 5)};
-        DTW dtw = new DTW(n1, n2);
+        DTW<Point> dtw = new DTW<>(n1, n2);
 
 
 
@@ -214,6 +214,6 @@ public class DTW <T extends DTW.Distancable>
      */
     public interface Distancable<T extends Distancable>
     {
-        public double distance(T other);
+        double distance(T other);
     }
 }

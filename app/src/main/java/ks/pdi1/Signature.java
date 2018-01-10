@@ -79,7 +79,7 @@ public class Signature
         }
 
 
-        //TODO
+        //TODO warunek stopu, wybór wzorca
         return template;
     }
 
@@ -198,8 +198,7 @@ public class Signature
         Log.d("pdi.SignatureDTW", dtw.toString());
         Log.d("pdi.SignatureDTW", "warpingDist " + dtw.warpingDistance + " dist " + dtw.accumulatedDist);
 
-        //TODO
-
+        //TODO ustalenie wyniku, wartości jakie wpływają na wynik porównania
 
         return value;
     }

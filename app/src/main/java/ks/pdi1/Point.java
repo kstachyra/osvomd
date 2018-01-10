@@ -5,9 +5,7 @@ import ks.pdi1.DTW.Distancable;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
-/**
- * Created by KS on 09.01.2018.
- */ /*klasa reprezentująca jeden punkty podpisu (czas, x, y, press)*/
+/**klasa reprezentująca jeden punkt podpisu (czas, x, y, press)*/
 class Point implements Distancable<Point>
 {
     double x;

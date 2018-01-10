@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity
                 writeSigToFile(sig.name + "_RAW", sig.getSigBytes(), false, false);
                 sig.normalize();
                 writeSigToFile(sig.name, sig.getSigBytes(), false, false);
+                writeSigToFile("1", sig.getSigBytes(), true, false);
                 captureSpenSurfaceView(sig.name);
                 clearCurrentSig();
             } catch (Exception e)
@@ -211,14 +212,16 @@ public class MainActivity extends AppCompatActivity
 
             try
             {
-                Signature sig1 = readSigFromFile("1", false, false);
+                Signature sig1 = readSigFromFile("1", true, false);
                 Signature sig2 = readSigFromFile("2", false, false);
 
-                List<Signature> tempList = new LinkedList<Signature>();
+                sig1.print();
+
+                /*List<Signature> tempList = new LinkedList<Signature>();
                 tempList.add(sig1);
                 tempList.add(sig2);
 
-                Signature pattern = Signature.templateSignature(tempList, PATTERN_ITERATIONS);
+                Signature pattern = Signature.templateSignature(tempList, PATTERN_ITERATIONS);*/
 
                 //pattern.print();
 
@@ -322,7 +325,6 @@ public class MainActivity extends AppCompatActivity
 
         //towrzenie SpenSurfaceView
         mSpenSurfaceView = new SpenSurfaceView(mContext);
-
 
 
         if (mSpenSurfaceView == null)
