@@ -27,10 +27,10 @@ public class DTW <T extends DTW.Distancable>
     protected double warpingDistance;
     protected double accumulatedDist;
 
-    public DTW(T[] sample, T[] templete)
+    public DTW(T[] sample, T[] template)
     {
         seq1 = sample;
-        seq2 = templete;
+        seq2 = template;
 
         n = seq1.length;
         m = seq2.length;
@@ -191,8 +191,10 @@ public class DTW <T extends DTW.Distancable>
     public static void test()
     {
         Point[] n2 = {new Point(0, 1, 2, 3), new Point(5, 5, 5, 5)};
-        Point[] n1 = {new Point(0, 1, 2, 3), new Point(10, 11, 12, 18)};
+        Point[] n1 = {new Point(0, 1, 2, 3), new Point(0, 1, 2, 3), new Point(0, 1, 2, 3), new Point(5, 5, 5, 5)};
         DTW dtw = new DTW(n1, n2);
+
+
 
         /*for (int i=0; i<dtw.warpingPath.length; ++i)
         {

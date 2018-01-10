@@ -44,6 +44,8 @@ import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 
@@ -207,6 +209,27 @@ public class MainActivity extends AppCompatActivity
             //Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
             clearCurrentSig();
 
+            try
+            {
+                Signature sig1 = readSigFromFile("1", false, false);
+                Signature sig2 = readSigFromFile("2", false, false);
+
+                List<Signature> tempList = new LinkedList<Signature>();
+                tempList.add(sig1);
+                tempList.add(sig2);
+
+                Signature pattern = Signature.templateSignature(tempList, PATTERN_ITERATIONS);
+
+                //pattern.print();
+
+                //Signature.compare(pattern, sig2);
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+
+
             /*synchronized (lock)
             {
                 mSpenPageDoc.setCurrentLayer(BACKGROUND_LAYER);
@@ -262,7 +285,7 @@ public class MainActivity extends AppCompatActivity
 
         Log.d("pdi.DW", String.valueOf(DynamicTimeWarping.d(k, s, 20)));*/
 
-        DTW.test();
+        //DTW.test();
     }
 
     @Override

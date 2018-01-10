@@ -1,9 +1,12 @@
 package ks.pdi1;
 
+import android.annotation.SuppressLint;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
@@ -32,30 +35,172 @@ public class Signature
         getDataFromBytes(b);
     }
 
+    public Signature (Signature other)
+    {
+        this.name = other.name;
+        this.ID = other.ID;
+        this.points = new LinkedList<Point>();
+
+        for (Point p : other.points)
+        {
+            this.points.add(new Point(p.time, p.x, p.y, p.press));
+        }
+    }
+
     /**z listy podpisów tworzy jeden wzorzec
      * IPPA algorithm
-     * @param signatures
+     * @param signatures enrollment signatures
      * @return hiddenSignature
      */
-    static public Signature patternSignature(List<Signature> signatures)
+    static public Signature templateSignature(List<Signature> signatures, int interations)
     {
-        Signature pattern = new Signature();
+        Signature template = new Signature();
+
+        //kopia listy signatures
+        List<Signature> hiddenSignatures = new LinkedList<Signature>();
+        for (Signature s : signatures)
+        {
+            hiddenSignatures.add(new Signature(s));
+        }
+
+        for (int i=0; i<interations; ++i)
+        {
+            LinkedList<Signature> newHidden = new LinkedList<Signature>();
+            for (Signature hid : hiddenSignatures)
+            {
+                LinkedList<Signature> inHiddenTime = new LinkedList<Signature>();
+                for (Signature sig : signatures) //dla każdej pary
+                {
+                    inHiddenTime.add(sig.warpToTime(hid));
+                }
+                newHidden.add(averageSignature(inHiddenTime));
+            }
+            hiddenSignatures = newHidden;
+        }
+
 
         //TODO
+        return template;
+    }
 
-        return pattern;
+    /**z listy podpisów ZMARSZCZONYCH DO TAKIEGO SAMEGO CZASU, wylicza średni podpis
+     *
+     * @param inHiddenTime lista podpisów zgodnie zmarszczonych
+     * @return średni podpis
+     */
+    @Nullable
+    private static Signature averageSignature(final LinkedList<Signature> inHiddenTime)
+    {
+        //spr czy równe długosci podpisów
+        int size = inHiddenTime.getFirst().points.size();
+        for (Signature s : inHiddenTime)
+        {
+            if (s.points.size() != size)
+            {
+                Log.d("pdi.signature.err", "different signatures size!");
+                return null;
+            }
+        }
+
+        Signature newSig = new Signature();
+        //dla każdego punktu
+        for (int i=0; i<size; ++i)
+        {
+            long time = 0;
+            double x = 0.0;
+            double y = 0.0;
+            double press = 0.0;
+
+            //uśrednij ze wszystkich podpisów
+            for (Signature s : inHiddenTime)
+            {
+                time += s.points.get(i).time;
+                x += s.points.get(i).x;
+                y += s.points.get(i).y;
+                press += s.points.get(i).press;
+            }
+            time = time / inHiddenTime.size();
+            x = x / inHiddenTime.size();
+            y = y / inHiddenTime.size();
+            press = press / inHiddenTime.size();
+
+            //dodaj obliczony punkt
+            newSig.addPoint(time, x, y, press);
+        }
+        return newSig;
+    }
+
+    /**przekształca czas podpisu do czasu podanego w parametrze, zgodnie ze ściażką marszczenia
+     *
+     * @param timeSig podpis względem którego marszczymy
+     * @return zmarszczony nowy podpis
+     */
+    private Signature warpToTime(final Signature timeSig)
+    {
+        Signature newSig = new Signature();
+
+        //pusta lista
+        ArrayList<LinkedList<Integer>> map = new ArrayList<>();
+        for (int i=0; i<timeSig.points.size(); ++i)
+        {
+            map.add(new LinkedList<Integer>());
+        }
+
+        //oblicz DTW warping path
+        DTW<Point> dtw = new DTW<>(this.points.toArray(new Point[0]), timeSig.points.toArray(new Point[0]));
+
+        //twórz listę punktów starego podpisu dla punktów czasowych nowego
+        for (int[] i : dtw.warpingPath)
+        {
+            map.get(i[1]).add(i[0]);
+        }
+
+        //dla każdego nowego punktu czasowego oblicz (lub skopiuj) odpowiedni nowy (uśredniony) punkt
+        for (int i=0; i<timeSig.points.size(); ++i)
+        {
+            long time = 0;
+            double x = 0.0;
+            double y = 0.0;
+            double press = 0.0;
+
+            //uśrednij wszystkie punkty
+            for (int j=0; j<map.get(i).size(); ++j)
+            {
+                int index = map.get(i).get(j); //indeks marszczonego punktu
+
+                time += this.points.get(index).time;
+                x += this.points.get(index).x;
+                y += this.points.get(index).y;
+                press += this.points.get(index).press;
+            }
+            time = time / map.get(i).size();
+            x = x / map.get(i).size();
+            y = y / map.get(i).size();
+            press = press / map.get(i).size();
+
+            //dodaj obliczony punkt
+            newSig.addPoint(time, x, y, press);
+        }
+        return newSig;
     }
 
     /**porównuje dwa podpisy
      *
-     * @param sig1
-     * @param sig2
+     * @param sig1 pierwszy podpis
+     * @param sig2 drugi podpis
      * @return comaprison value (more -> more different signatures)
      */
     static public double compare(Signature sig1, Signature sig2)
     {
         double value = Double.MAX_VALUE;
+
+        DTW<Point> dtw = new DTW<>(sig1.points.toArray(new Point[0]), sig2.points.toArray(new Point[0]));
+        Log.d("pdi.SignatureDTW", dtw.toString());
+        Log.d("pdi.SignatureDTW", "warpingDist " + dtw.warpingDistance + " dist " + dtw.accumulatedDist);
+
         //TODO
+
+
         return value;
     }
 
@@ -100,7 +245,7 @@ public class Signature
     /*zwraca podpis jako pojedynczy string*/
     private String getSigString()
     {
-        String sigString = new String();
+        String sigString = "";
         for (Point p : points)
         {
             sigString = sigString.concat(p.toString()).concat(System.lineSeparator());
@@ -164,7 +309,7 @@ public class Signature
     private String rename()
     {
         Date currentDate = Calendar.getInstance().getTime();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss");
         String stringDate = formatter.format(currentDate);
         stringDate = ID + stringDate;
         name = stringDate;

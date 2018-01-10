@@ -32,6 +32,6 @@ class Point implements Distancable<Point>
     @Override
     public double distance(Point other)
     {
-        return sqrt( pow((this.x - other.x), 2) + pow((this.y - other.y), 2) + pow((this.press - other.press), 2) );
+        return sqrt( pow((this.x - other.x), 2) + pow((this.y - other.y), 2) + pow((this.press - other.press), 2) + (pow((this.time - other.time), 2))/1000000);
     }
 }

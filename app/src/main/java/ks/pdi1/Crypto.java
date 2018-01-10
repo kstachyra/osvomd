@@ -20,8 +20,8 @@ public class Crypto
         char[] androidIdBytes = androidId.toCharArray();
         byte[] apkConstantBytes = apkConstant.getBytes(StandardCharsets.UTF_8);
 
-        final int iterations = ITERATIONS;
-        final int outputKeyLength = KEY_LENGTH;
+        final int iterations = CRYPTO_ITERATIONS;
+        final int outputKeyLength = CRYPTO_KEY_LENGTH;
         SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         KeySpec keySpec = new PBEKeySpec(androidIdBytes, apkConstantBytes, iterations, outputKeyLength);
         SecretKey secretKey = secretKeyFactory.generateSecret(keySpec);

@@ -12,8 +12,11 @@ public class Constants
     public final static int COMPRESS = 0;
 
     /*Crypto*/
-    public final static int ITERATIONS = 1000;
-    public final static int KEY_LENGTH = 256;
+    public final static int CRYPTO_ITERATIONS = 1000;
+    public final static int CRYPTO_KEY_LENGTH = 256;
 
     public final static String APK_CONSTANT = "asdkl;";
+
+    /*pattern*/
+    public final static int PATTERN_ITERATIONS = 10;
 }
