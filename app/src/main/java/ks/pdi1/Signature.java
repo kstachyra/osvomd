@@ -35,6 +35,7 @@ public class Signature
         getDataFromBytes(b);
     }
 
+    /**konstruktor kopiujący*/
     public Signature (Signature other)
     {
         this.name = other.name;
@@ -144,7 +145,7 @@ public class Signature
     /**z listy podpisów ZMARSZCZONYCH DO TAKIEGO SAMEGO CZASU, wylicza średni podpis
      *
      * @param inHiddenTime lista podpisów zgodnie zmarszczonych
-     * @return średni podpis
+     * @return średni podpis, null gdy różne czasy
      */
     @Nullable
     private static Signature averageSignature(final LinkedList<Signature> inHiddenTime)
@@ -366,7 +367,7 @@ public class Signature
         }
     }
 
-    /*zmienia nazwę podpisu na zgodną z aktualnym ID i datą*/
+    /*zmienia nazwę podpisu (pole name) na zgodną z aktualnym ID i datą*/
     private String rename()
     {
         Date currentDate = Calendar.getInstance().getTime();
@@ -377,7 +378,7 @@ public class Signature
         return stringDate;
     }
 
-    /*zeruje obecny podpis*/
+    /*zeruje obecny podpis, uaktualnia datę w nazwie*/
     public void clear()
     {
         try
@@ -433,25 +434,4 @@ public class Signature
         this.ID = id;
         rename();
     }
-
-    /**sprawdza, czy podpisy są równe w sensie tożsamości wszystkich punktów*/
-    /*@Override
-    public boolean equals(Object obj)
-    {
-        if (obj.getClass() == Signature.class) return false;
-
-        Signature other = (Signature) obj;
-
-        if (this.points.size() != other.points.size()) return false;
-
-        for(int i = 0; i<this.points.size(); ++i)
-        {
-            if (!this.points.get(i).equals(other.points.get(i)))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }*/
 }

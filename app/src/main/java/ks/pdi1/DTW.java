@@ -2,26 +2,19 @@ package ks.pdi1;
 
 import android.util.Log;
 
-/**
- * This class implements the Dynamic Time Warping algorithm given two sequences.
- * I have checked the out put of this class and it works exactly same as of the
- * MATLAB dtw implementation. I have added one extra function to this class to
- * get ACCUMULATED-DISTANCE. This accumulated distance is basically the distance
- * between two time series. The original implementation only returns the warping
- * distance.
- *
- * @author Cheol-Woo Jung (cjung@gatech.edu) Modified: Muhammad Muaaz
- * @version 1.0
+/**Zmodyfikowana klasa, zmieniona na typ generyczny i podejście do generowania ścieżki marszczenia,
+ * na podstawie kodu autorstwa Cheol-Woo Jung (cjung@gatech.edu) i Muhammad Muaaz
+ * @param <T> typ przechowywanych i porównywanych danych, musi imlementować Distancable
  */
 public class DTW <T extends DTW.Distancable>
 {
 
-    protected T[] seq1;
-    protected T[] seq2;
+    protected T[] data1;
+    protected T[] data2;
     protected int[][] warpingPath;
 
-    protected int n;
-    protected int m;
+    protected int size1;
+    protected int size2;
     protected int K;
 
     protected double warpingDistance;
@@ -29,60 +22,61 @@ public class DTW <T extends DTW.Distancable>
 
     public DTW(T[] sample, T[] template)
     {
-        seq1 = sample;
-        seq2 = template;
+        data1 = sample;
+        data2 = template;
 
-        n = seq1.length;
-        m = seq2.length;
+        size1 = data1.length;
+        size2 = data2.length;
         K = 1;
 
-        warpingPath = new int[n + m][2];    // max(n, m) <= K < n + m
+        warpingPath = new int[size1 + size2][2];    // max(size1, size2) <= K < size1 + size2
         warpingDistance = 0.0;
         accumulatedDist = 0.0;
 
         this.compute();
     }
 
+    /**wyliczanie ścieżki marszczenia i wartości odległości*/
     public void compute()
     {
         double accumulatedDistance = 0.0;
 
-        double[][] d = new double[n][m];    // local distances
-        double[][] D = new double[n][m];    // global distances
+        double[][] d = new double[size1][size2];    // local distances
+        double[][] D = new double[size1][size2];    // global distances
 
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < size1; i++)
         {
-            for (int j = 0; j < m; j++)
+            for (int j = 0; j < size2; j++)
             {
-                d[i][j] = seq1[i].distance(seq2[j]);
+                d[i][j] = data1[i].distance(data2[j]);
             }
         }
 
         D[0][0] = d[0][0];
 
-        for (int i = 1; i < n; i++)
+        for (int i = 1; i < size1; i++)
         {
             D[i][0] = d[i][0] + D[i - 1][0];
         }
 
-        for (int j = 1; j < m; j++)
+        for (int j = 1; j < size2; j++)
         {
             D[0][j] = d[0][j] + D[0][j - 1];
         }
 
-        for (int i = 1; i < n; i++)
+        for (int i = 1; i < size1; i++)
         {
-            for (int j = 1; j < m; j++)
+            for (int j = 1; j < size2; j++)
             {
                 accumulatedDistance = Math.min(Math.min(D[i - 1][j], D[i - 1][j - 1]), D[i][j - 1]);
                 accumulatedDistance += d[i][j];
                 D[i][j] = accumulatedDistance;
             }
         }
-        accumulatedDistance = D[n - 1][m - 1];
+        accumulatedDistance = D[size1 - 1][size2 - 1];
 
-        int i = n - 1;
-        int j = m - 1;
+        int i = size1 - 1;
+        int j = size2 - 1;
         int minIndex = 1;
 
         warpingPath[K - 1][0] = i;
@@ -122,12 +116,7 @@ public class DTW <T extends DTW.Distancable>
         this.reversePath(warpingPath);
     }
 
-    /**
-     * Changes the order of the warping path (increasing order)
-     *
-     * @param path the warping path in reverse order
-     */
-    protected void reversePath(int[][] path)
+    private void reversePath(int[][] path)
     {
         int[][] newPath = new int[K][2];
         for (int i = 0; i < K; i++)
@@ -140,23 +129,7 @@ public class DTW <T extends DTW.Distancable>
         warpingPath = newPath;
     }
 
-    public double getWarpingDistance()
-    {
-        return warpingDistance;
-    }
-
-    public double getAccumulatedDistance()
-    {
-        return accumulatedDist;
-    }
-
-    /**
-     * Finds the index of the minimum element from the given array
-     *
-     * @param array the array containing numeric values
-     * @return the min value among elements
-     */
-    protected int getIndexOfMinimum(double[] array)
+    private int getIndexOfMinimum(double[] array)
     {
         int index = 0;
         double val = array[0];
@@ -172,9 +145,6 @@ public class DTW <T extends DTW.Distancable>
         return index;
     }
 
-    /**
-     * Returns a string that displays the warping distance and path
-     */
     public String toString()
     {
         String retVal = "Warping Distance: " + warpingDistance + "\n";
@@ -186,6 +156,22 @@ public class DTW <T extends DTW.Distancable>
 
         }
         return retVal;
+    }
+
+    public double getWarpingDistance()
+    {
+        return warpingDistance;
+    }
+
+    public double getAccumulatedDistance()
+    {
+        return accumulatedDist;
+    }
+
+    /**interfejs do zwracania odległości między dwoma obiektami*/
+    public interface Distancable<T extends Distancable>
+    {
+        double distance(T other);
     }
 
     public static void test()
@@ -207,13 +193,5 @@ public class DTW <T extends DTW.Distancable>
         Log.d("pdi.DTW","Accumulated distance between the series is :  " + dtw.getAccumulatedDistance());
         Log.d("pdi.DTW","Warping Distance is between the series is :  " + dtw.getWarpingDistance());*/
         Log.d("pdi.DTW", dtw.toString());
-    }
-
-    /**
-     * interface for measure distance between two objects of the same type
-     */
-    public interface Distancable<T extends Distancable>
-    {
-        double distance(T other);
     }
 }

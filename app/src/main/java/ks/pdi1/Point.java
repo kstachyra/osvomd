@@ -34,21 +34,4 @@ class Point implements Distancable<Point>
     {
         return sqrt( pow((this.x - other.x), 2) + pow((this.y - other.y), 2) + pow((this.press - other.press), 2) + (pow((this.time - other.time), 2))/1000000);
     }
-
-    /**czy są równe w sensie równosci wszystkich punktów*/
-    /*@Override
-    public boolean equals(Object obj)
-    {
-        if (obj.getClass() != Point.class) return false;
-
-        Point other = (Point) obj;
-
-        if (this.time == other.time && pow((this.x - other.x), 2)<0.001 && pow((this.y - other.y), 2)<0.001 && pow((this.press - other.press), 2)<0.001)
-        {
-            Log.d("pdi.kkk", "COSTAM");
-            return true;
-        }
-
-        return false;
-    }*/
 }
