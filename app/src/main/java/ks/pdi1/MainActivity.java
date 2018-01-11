@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity
             try
             {
                 //sig2 = readSigFromFile("KK", true, true);
-                sig = loadSUSigFile("001_1_1.sig");
+                sig = loadSVCFile("U1S1.TXT");
             } catch (Exception e)
             {
                 e.printStackTrace();
@@ -538,11 +538,67 @@ public class MainActivity extends AppCompatActivity
         return newSig;
     }
 
-    /* wczytuje podpis w formacie SUSig*/
-    private Signature loadSVCFile(String filename)
+    /* wczytuje podpis w formacie SVC*/
+    @Nullable
+    private Signature loadSVCFile(String filename) throws IOException, OSVOMDStorageException
     {
-        //TODO read svc
-        return null;
+        Signature newSig = new Signature();
+
+        FileInputStream is;
+        BufferedReader br;
+        File mainDir = getFilePath();
+        final File file = new File(mainDir.getAbsolutePath() + "/" + filename);
+
+        //wszystkie linie pliku
+        LinkedList<String> lines = new LinkedList<String>();
+
+        if (file.exists())
+        {
+            is = new FileInputStream(file);
+            br = new BufferedReader(new InputStreamReader(is));
+            String line = br.readLine();
+
+            while(line != null)
+            {
+                lines.add(line);
+                line = br.readLine();
+            }
+            br.close();
+        }
+        else
+        {
+            Log.d("pdi.loadSVC", "plik " + filename + " " + "nie istnieje");
+            return null;
+        }
+
+        //usuwa dwie pierwsze linie
+        if (lines.size()>1)
+        {
+            lines.remove(0);
+        }
+        else
+        {
+            Log.d("pdi.loadSVC", "plik " + filename + " " + "niepoprawny");
+            return null;
+        }
+
+        for (String line : lines)
+        {
+            String[] values = line.split(" ");
+            if (values.length == 7)
+            {
+                newSig.addPoint(Long.parseLong(values[2]), Double.parseDouble(values[0]), Double.parseDouble(values[1]), Double.parseDouble(values[6]));
+            }
+            else
+            {
+                Log.d("pdi.loadSVC", "plik " + filename + " " + "niepoprawny");
+                return null;
+            }
+        }
+        newSig.setID(filename);
+        newSig.normalize();
+        newSig.rePress();
+        return newSig;
     }
 
     /*zapisuje obraz podpisu z NoteDocPage jako plik png o zadanej nazwie w folderze domyślnym publicznym*/
