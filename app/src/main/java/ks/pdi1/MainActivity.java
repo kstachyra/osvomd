@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity
 
                 Signature template = Signature.templateSignature(tempList, MAX_PATTERN_ITERATIONS);
 
-                template.print();
+                //template.print();
 
                 //Signature.compare(pattern, sig2);
             } catch (Exception e)

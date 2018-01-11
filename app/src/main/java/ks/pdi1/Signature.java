@@ -65,6 +65,8 @@ public class Signature
 
         //macierz sprawdzania warunku stopu, przechowuje informacje o poprzednich wynikach marszczenia
         double[][] prevScores = new double[signatures.size()][hiddenSignatures.size()];
+        //w celu uniknięcia "oscylacji", sprawdzamy też wyniki dwa kroki przed
+        double[][] prevPrevScores = new double[signatures.size()][hiddenSignatures.size()];
         //warunek stopu
         boolean stop = false;
         for (int i=0; i<maxInterations; ++i)
@@ -81,7 +83,9 @@ public class Signature
                     double[] score = new double[1];
                     inHiddenTime.add(sig.warpToTime(hid, score));
 
-                    if (prevScores[sigIdx][hidIdx] != score[0]) stop = false; //są różne, więc jeszcze nie koniec
+                    if (prevScores[sigIdx][hidIdx] != score[0] && prevPrevScores[sigIdx][hidIdx] != score[0]) stop = false; //są różne, więc jeszcze nie koniec
+
+                    prevPrevScores[sigIdx][hidIdx] = prevScores[sigIdx][hidIdx];
                     prevScores[sigIdx][hidIdx] = score[0];
                     ++sigIdx;
                 }
