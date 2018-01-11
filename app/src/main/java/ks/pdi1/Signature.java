@@ -50,9 +50,9 @@ public class Signature
     /**z listy podpisów tworzy jeden wzorzec
      * IPPA algorithm
      * @param signatures enrollment signatures
-     * @return hiddenSignature
+     * @return templateSignature
      */
-    static public Signature templateSignature(List<Signature> signatures, int interations)
+    static public Signature templateSignature(List<Signature> signatures, int maxInterations)
     {
         Signature template = new Signature();
 
@@ -63,47 +63,41 @@ public class Signature
             hiddenSignatures.add(new Signature(s));
         }
 
-        //macierz sprawdzania warunku stopu, przechowuje informacje o poprzednich wynikach
+        //macierz sprawdzania warunku stopu, przechowuje informacje o poprzednich wynikach marszczenia
         double[][] prevScores = new double[signatures.size()][hiddenSignatures.size()];
         //warunek stopu
         boolean stop = false;
-        for (int i=0; i<interations; ++i)
+        for (int i=0; i<maxInterations; ++i)
         {
+            stop = true;
             LinkedList<Signature> newHidden = new LinkedList<Signature>();
+            int hidIdx = 0;
             for (Signature hid : hiddenSignatures)
             {
+                int sigIdx = 0;
                 LinkedList<Signature> inHiddenTime = new LinkedList<Signature>();
                 for (Signature sig : signatures) //dla każdej pary
                 {
-                    inHiddenTime.add(sig.warpToTime(hid));
+                    double[] score = new double[1];
+                    inHiddenTime.add(sig.warpToTime(hid, score));
+
+                    if (prevScores[sigIdx][hidIdx] != score[0]) stop = false; //są różne, więc jeszcze nie koniec
+                    prevScores[sigIdx][hidIdx] = score[0];
+                    ++sigIdx;
                 }
                 newHidden.add(averageSignature(inHiddenTime));
+                ++hidIdx;
             }
             hiddenSignatures = newHidden;
 
-            stop = true;
-            for (int j=0; j<signatures.size(); ++j)
-            {
-                for (int k=0; k<hiddenSignatures.size(); ++k)
-                {
-                    DTW<Point> dtw = new DTW<Point>(signatures.get(j).getPointArray(), hiddenSignatures.get(k).getPointArray());
-                    if (prevScores[j][k] != dtw.warpingDistance) stop = false;
-                    prevScores[j][k] = dtw.warpingDistance;
-                }
-            }
-
-            Log.d("pdi.kkk", " !" + i);
-
             //nic się już nie zmieniło
-            if (stop)
-            {
-                Log.d("pdi.kkk", "STOP!");
-                //break;
-            }
+            if (stop) break;
         }
 
+        Log.d("pdi.kkk", "poza petla");
 
-        //TODO warunek stopu, wybór wzorca
+
+        //TODO wybór wzorca
         return template;
     }
 
@@ -156,10 +150,11 @@ public class Signature
 
     /**przekształca czas podpisu do czasu podanego w parametrze, zgodnie ze ściażką marszczenia
      *
-     * @param timeSig podpis względem którego marszczymy
-     * @return zmarszczony nowy podpis
+     * @param timeSig podpis, do którego czasu sięodnosimy
+     * @param score zmienna, w której zapisywany jest wynik marszczenia
+     * @return nowy zmarszczony podpis w czasie podpisu timeSig
      */
-    private Signature warpToTime(final Signature timeSig)
+    private Signature warpToTime(final Signature timeSig, double[] score)
     {
         Signature newSig = new Signature();
 
@@ -172,6 +167,9 @@ public class Signature
 
         //oblicz DTW warping path
         DTW<Point> dtw = new DTW<>(this.getPointArray(), timeSig.getPointArray());
+
+        //zapisz wynik ścieżki do zmiennej w paramietrze
+        score[0] = dtw.warpingDistance;
 
         //twórz listę punktów starego podpisu dla punktów czasowych nowego
         for (int[] i : dtw.warpingPath)
