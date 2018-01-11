@@ -94,11 +94,47 @@ public class Signature
             if (stop) break;
         }
 
-        Log.d("pdi.kkk", "poza petla");
-
-
-        //TODO wybór wzorca
+        template = pickBestSignature(hiddenSignatures, signatures);
         return template;
+    }
+
+    /** z listy proponowanych wzorców, wybiera taki o najmniejszym najgorszym wyniku porównania ze zbiorem enrollemnt
+     *
+     * @param hiddenSignatures proponowane wzorce
+     * @param entrollmentSignatures podpisy na podstawie których wybieramy
+     * @return najlepszy podpis
+     */
+    private static Signature pickBestSignature(List<Signature> hiddenSignatures, List<Signature> entrollmentSignatures)
+    {
+        double[] worstScores = new double[hiddenSignatures.size()];
+
+        int hidIdx = 0;
+        for (Signature h : hiddenSignatures)
+        {
+            Log.d("pdi.kkk", "indeks " + hidIdx + " wyniki dlan");
+            for (Signature e : entrollmentSignatures)
+            {
+
+                double newScore = new DTW<Point>(h.getPointArray(), e.getPointArray()).getWarpingDistance();
+                Log.d("pdi.kkk", "newScore, czyli wynik porównania " + newScore);
+
+                if (newScore > worstScores[hidIdx]) worstScores[hidIdx] = newScore;
+            }
+            ++hidIdx;
+        }
+
+        int pickIdx = 0;
+        double bestScore = Double.MAX_VALUE;
+        for (int i=0; i<worstScores.length; ++i)
+        {
+            if (worstScores[i] < bestScore)
+            {
+                bestScore = worstScores[i];
+                pickIdx = i;
+            }
+        }
+        Log.d("pdi.kkk", "wybrano podpis o inx " + pickIdx + "który miał najgorszą wartość jedynie " + bestScore);
+        return hiddenSignatures.get(pickIdx);
     }
 
     /**z listy podpisów ZMARSZCZONYCH DO TAKIEGO SAMEGO CZASU, wylicza średni podpis
@@ -203,8 +239,6 @@ public class Signature
             //dodaj obliczony punkt
             newSig.addPoint(time, x, y, press);
         }
-
-        Log.d("pdi.kkk", "path leng " + dtw.warpingDistance);
         return newSig;
     }
 
