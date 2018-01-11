@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PDI1</string>
+    <string name="app_name">OSVOMD</string>
     <string name="title_activity_scrolling">ScrollingActivity</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"

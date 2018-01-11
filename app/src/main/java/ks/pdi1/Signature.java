@@ -450,6 +450,12 @@ public class Signature
         return points.toArray(new Point[0]);
     }
 
+    /**zwraca czas trwania podpisu*/
+    public long getSignatureTime()
+    {
+        return points.get(points.size()-1).time;
+    }
+
 
     public void setID(String id)
     {

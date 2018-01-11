@@ -40,7 +40,6 @@ import com.samsung.android.sdk.pen.engine.SpenTouchListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -49,7 +48,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 import javax.crypto.SecretKey;
 
@@ -57,7 +55,7 @@ public class MainActivity extends AppCompatActivity
 {
     private static final Object lock = true;
 
-    private static String ID = "_";
+    private static String ID = "";
     private static Signature sig;
 
 
@@ -123,10 +121,10 @@ public class MainActivity extends AppCompatActivity
             try
             {
                 sig.setID(ID);
-                writeSigToFile(sig.name + "_RAW", sig.getSigBytes(), false, false);
+                writeSigToFile(sig.name + "_RAW", sig, false, false);
                 sig.normalize();
-                writeSigToFile(sig.name, sig.getSigBytes(), false, false);
-                writeSigToFile("1", sig.getSigBytes(), true, false);
+                writeSigToFile(sig.name, sig, false, false);
+                writeSigToFile("1", sig, true, false);
                 captureSpenSurfaceView(sig.name);
                 clearCurrentSig();
             } catch (Exception e)
@@ -163,12 +161,13 @@ public class MainActivity extends AppCompatActivity
             //Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
             //sig.normalize();
 
-            //showDialogWindow();
+            showDialogWindow();
 
             try
             {
                 //sig2 = readSigFromFile("KK", true, true);
-                sig = loadSVCFile("U1S1.TXT");
+                //sig = loadSVCFile("U1S1.TXT");
+
             } catch (Exception e)
             {
                 e.printStackTrace();
@@ -187,19 +186,19 @@ public class MainActivity extends AppCompatActivity
 
             try
             {
-                Signature sig1 = readSigFromFile("1", false, false);
+                /*Signature sig1 = readSigFromFile("1", false, false);
                 Signature sig2 = readSigFromFile("2", false, false);
-                Signature sig3 = readSigFromFile("3", false, false);
+                Signature sig3 = readSigFromFile("3", false, false);*/
 
 
                 //sig1.print();
 
-                List<Signature> tempList = new LinkedList<Signature>();
+                /*List<Signature> tempList = new LinkedList<Signature>();
                 tempList.add(sig1);
                 tempList.add(sig2);
                 tempList.add(sig3);
 
-                Signature template = Signature.templateSignature(tempList, MAX_PATTERN_ITERATIONS);
+                Signature template = Signature.templateSignature(tempList, MAX_PATTERN_ITERATIONS);*/
 
                 //template.print();
 
@@ -239,6 +238,7 @@ public class MainActivity extends AppCompatActivity
         // Set up the input
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setText(ID);
         builder.setView(input);
 
         // Set up the buttons
@@ -419,8 +419,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     /* zapisuje obecny podpis do pliku, z opcją szyfrowania, MODE_PRIVATE*/
-    private void writeSigToFile(String filename, byte[] sigBytes, boolean encrypted, boolean modePrivate) throws OSVOMDStorageException, IOException, Exception
+    private void writeSigToFile(String filename, Signature signature, boolean encrypted, boolean modePrivate) throws OSVOMDStorageException, IOException, Exception
     {
+        byte[] sigBytes = signature.getSigBytes();
         if (encrypted) sigBytes = encrypt(getCryptoKey(), sigBytes);
 
         FileOutputStream fos = null;
@@ -697,8 +698,6 @@ public class MainActivity extends AppCompatActivity
             );
         }
     }
-
-
 
     /*public boolean drawPoint(View view, float x, float y, float press, int layerId)
     {
