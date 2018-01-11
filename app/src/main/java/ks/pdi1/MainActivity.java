@@ -14,6 +14,7 @@ import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.os.Environment;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -36,10 +37,13 @@ import com.samsung.android.sdk.pen.engine.SpenHoverListener;
 import com.samsung.android.sdk.pen.engine.SpenSurfaceView;
 import com.samsung.android.sdk.pen.engine.SpenTouchListener;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -48,8 +52,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.crypto.SecretKey;
-
-
 
 public class MainActivity extends AppCompatActivity
 {
@@ -161,11 +163,12 @@ public class MainActivity extends AppCompatActivity
             //Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
             //sig.normalize();
 
-            showDialogWindow();
+            //showDialogWindow();
 
             try
             {
                 //sig2 = readSigFromFile("KK", true, true);
+                sig = loadSUSigFile("001_1_1.sig");
             } catch (Exception e)
             {
                 e.printStackTrace();
@@ -173,34 +176,6 @@ public class MainActivity extends AppCompatActivity
 
         }
     };
-
-    /* wyświetla okno dialogowe, i przypisuje wpisaną wartość do zmiennej ID*/
-    private void showDialogWindow()
-    {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Signature ID");
-
-        // Set up the input
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        // Set up the buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                ID = input.getText().toString();
-            }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
 
     private final View.OnClickListener button_CLRListener = new View.OnClickListener()
     {
@@ -255,6 +230,33 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+    /* wyświetla okno dialogowe, i przypisuje wpisaną wartość do zmiennej ID*/
+    private void showDialogWindow()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Signature ID");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                ID = input.getText().toString();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -270,28 +272,6 @@ public class MainActivity extends AppCompatActivity
 
         initSpen();
         addListeners();
-        initDTW();
-
-    }
-
-    private void initDTW()
-    {
-        /*double[] k = new double[5];
-        double[] s = new double[6];
-
-        for (int i=0; i<k.length; ++i)
-        {
-            k[i] = i+i*0.5;
-        }
-
-        for (int i=0; i<s.length; ++i)
-        {
-            s[i] = i;
-        }
-
-        Log.d("pdi.DW", String.valueOf(DynamicTimeWarping.d(k, s, 20)));*/
-
-        //DTW.test();
     }
 
     @Override
@@ -493,6 +473,78 @@ public class MainActivity extends AppCompatActivity
         return newSig;
     }
 
+    /* wczytuje podpis w formacie SUSig*/
+    @Nullable
+    private Signature loadSUSigFile(String filename) throws IOException, OSVOMDStorageException
+    {
+        Signature newSig = new Signature();
+
+        FileInputStream is;
+        BufferedReader br;
+        File mainDir = getFilePath();
+        final File file = new File(mainDir.getAbsolutePath() + "/" + filename);
+
+        //wszystkie linie pliku
+        LinkedList<String> lines = new LinkedList<String>();
+
+        if (file.exists())
+        {
+            is = new FileInputStream(file);
+            br = new BufferedReader(new InputStreamReader(is));
+            String line = br.readLine();
+
+            while(line != null)
+            {
+                lines.add(line);
+                line = br.readLine();
+            }
+            br.close();
+        }
+        else
+        {
+            Log.d("pdi.loadSUSig", "plik " + filename + " " + "nie istnieje");
+            return null;
+        }
+
+        //usuwa dwie pierwsze linie
+        if (lines.size()>2)
+        {
+            lines.remove(0);
+            lines.remove(0);
+        }
+        else
+        {
+            Log.d("pdi.loadSUSig", "plik " + filename + " " + "niepoprawny");
+            return null;
+        }
+
+        for (String line : lines)
+        {
+            String[] values = line.split(" ");
+            if (values.length == 5)
+            {
+                newSig.addPoint(Long.parseLong(values[2]), Double.parseDouble(values[0]), Double.parseDouble(values[1]), Double.parseDouble(values[3]));
+            }
+            else
+            {
+                Log.d("pdi.loadSUSig", "plik " + filename + " " + "niepoprawny");
+                return null;
+            }
+        }
+        newSig.setID(filename);
+        newSig.normalize();
+        newSig.rePress();
+
+        return newSig;
+    }
+
+    /* wczytuje podpis w formacie SUSig*/
+    private Signature loadSVCFile(String filename)
+    {
+        //TODO read svc
+        return null;
+    }
+
     /*zapisuje obraz podpisu z NoteDocPage jako plik png o zadanej nazwie w folderze domyślnym publicznym*/
     private void captureSpenSurfaceView(String filename)
     {
@@ -558,6 +610,7 @@ public class MainActivity extends AppCompatActivity
         return fileCacheItem;
     }
 
+    @Nullable
     private SecretKey getCryptoKey()
     {
         try

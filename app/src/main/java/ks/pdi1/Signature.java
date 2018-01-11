@@ -367,6 +367,28 @@ public class Signature
         }
     }
 
+    /*standaryzuje wartości nacisku od 0 d 1
+    * dla innych zestawów danych niż przygotowane surowe na urządzeniu*/
+    public void rePress()
+    {
+        //znajdź min i max wartości punktów
+        double min = Double.MAX_VALUE;
+        double max = 0;
+
+        for (Point p : points)
+        {
+            if(p.press < min) min = p.press;
+            if(p.press > max) max = p.press;
+        }
+
+        //znormalizuj od 0 do 1
+        double range = max - min;
+        for (Point p : points)
+        {
+            p.press = (p.press - min)/range;
+        }
+    }
+
     /*zmienia nazwę podpisu (pole name) na zgodną z aktualnym ID i datą*/
     private String rename()
     {
