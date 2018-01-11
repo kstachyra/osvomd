@@ -212,16 +212,16 @@ public class MainActivity extends AppCompatActivity
 
             try
             {
-                Signature sig1 = readSigFromFile("1", true, false);
+                Signature sig1 = readSigFromFile("1", false, false);
                 Signature sig2 = readSigFromFile("2", false, false);
 
                 sig1.print();
 
-                /*List<Signature> tempList = new LinkedList<Signature>();
+                List<Signature> tempList = new LinkedList<Signature>();
                 tempList.add(sig1);
                 tempList.add(sig2);
 
-                Signature pattern = Signature.templateSignature(tempList, PATTERN_ITERATIONS);*/
+                Signature pattern = Signature.templateSignature(tempList, MAX_PATTERN_ITERATIONS);
 
                 //pattern.print();
 

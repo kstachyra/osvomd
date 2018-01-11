@@ -63,6 +63,10 @@ public class Signature
             hiddenSignatures.add(new Signature(s));
         }
 
+        //macierz sprawdzania warunku stopu, przechowuje informacje o poprzednich wynikach
+        double[][] prevScores = new double[signatures.size()][hiddenSignatures.size()];
+        //warunek stopu
+        boolean stop = false;
         for (int i=0; i<interations; ++i)
         {
             LinkedList<Signature> newHidden = new LinkedList<Signature>();
@@ -76,6 +80,26 @@ public class Signature
                 newHidden.add(averageSignature(inHiddenTime));
             }
             hiddenSignatures = newHidden;
+
+            stop = true;
+            for (int j=0; j<signatures.size(); ++j)
+            {
+                for (int k=0; k<hiddenSignatures.size(); ++k)
+                {
+                    DTW<Point> dtw = new DTW<Point>(signatures.get(j).getPointArray(), hiddenSignatures.get(k).getPointArray());
+                    if (prevScores[j][k] != dtw.warpingDistance) stop = false;
+                    prevScores[j][k] = dtw.warpingDistance;
+                }
+            }
+
+            Log.d("pdi.kkk", " !" + i);
+
+            //nic się już nie zmieniło
+            if (stop)
+            {
+                Log.d("pdi.kkk", "STOP!");
+                //break;
+            }
         }
 
 
@@ -147,7 +171,7 @@ public class Signature
         }
 
         //oblicz DTW warping path
-        DTW<Point> dtw = new DTW<>(this.points.toArray(new Point[0]), timeSig.points.toArray(new Point[0]));
+        DTW<Point> dtw = new DTW<>(this.getPointArray(), timeSig.getPointArray());
 
         //twórz listę punktów starego podpisu dla punktów czasowych nowego
         for (int[] i : dtw.warpingPath)
@@ -181,6 +205,8 @@ public class Signature
             //dodaj obliczony punkt
             newSig.addPoint(time, x, y, press);
         }
+
+        Log.d("pdi.kkk", "path leng " + dtw.warpingDistance);
         return newSig;
     }
 
@@ -359,10 +385,37 @@ public class Signature
         }
     }
 
+    /**zwraca tablice Point[] punktów podpisu*/
+    public Point[] getPointArray()
+    {
+        return points.toArray(new Point[0]);
+    }
+
 
     public void setID(String id)
     {
         this.ID = id;
         rename();
     }
+
+    /**sprawdza, czy podpisy są równe w sensie tożsamości wszystkich punktów*/
+    /*@Override
+    public boolean equals(Object obj)
+    {
+        if (obj.getClass() == Signature.class) return false;
+
+        Signature other = (Signature) obj;
+
+        if (this.points.size() != other.points.size()) return false;
+
+        for(int i = 0; i<this.points.size(); ++i)
+        {
+            if (!this.points.get(i).equals(other.points.get(i)))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }*/
 }
