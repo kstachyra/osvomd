@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity
                 writeSigToFile(sig.name + "_RAW", sig, false, false);
                 sig.normalize();
                 writeSigToFile(sig.name, sig, false, false);
-                writeSigToFile("1", sig, true, false);
                 captureSpenSurfaceView(sig.name);
                 clearCurrentSig();
             } catch (Exception e)
@@ -132,24 +131,13 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
             }
 
-            //writeSigToFile("KK");
-            //captureSpenSurfaceView("KK");
-
-
+            //sig2 = readSigFromFile("KK", true, true);
+            //sig = loadSVCFile("U1S1.TXT");
+            //Log.d("pdi.kkk", "time is " + sig.getSignatureTime());
 
             /*czyszczenie strony
             mSpenPageDoc.removeAllObject();
             mSpenSurfaceView.update();*/
-
-            /*zapisywanie scrennshota
-            captureSpenSurfaceView();*/
-
-            /*wyswietlanie obrazka
-            kkk(mSpenSurfaceView, 150, 150);*/
-
-            /*wątek rysujący
-            thread.start();*/
-
         }
     };
 
@@ -159,15 +147,11 @@ public class MainActivity extends AppCompatActivity
         public void onClick(View v)
         {
             //Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
-            //sig.normalize();
 
             showDialogWindow();
 
             try
             {
-                //sig2 = readSigFromFile("KK", true, true);
-                //sig = loadSVCFile("U1S1.TXT");
-
             } catch (Exception e)
             {
                 e.printStackTrace();
@@ -184,11 +168,74 @@ public class MainActivity extends AppCompatActivity
             //Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
             clearCurrentSig();
 
+            ArrayList<LinkedList<Signature>> genuine = new ArrayList<>();
+            ArrayList<LinkedList<Signature>> forgery = new ArrayList<>();
+            ArrayList<LinkedList<Signature>> skilled = new ArrayList<>();
             try
             {
-                /*Signature sig1 = readSigFromFile("1", false, false);
-                Signature sig2 = readSigFromFile("2", false, false);
-                Signature sig3 = readSigFromFile("3", false, false);*/
+                /*//liczba badanych podpisów
+                final int k = 20;
+
+                genuine.add(0, new LinkedList<Signature>());
+                for (int i=1; i<=k; ++i)
+                {
+                    genuine.add(i, new LinkedList<Signature>());
+                    for (int j=1; j<=10; ++j)
+                    {
+                        String filename = String.format("%03d", i) + "_1_" + j + ".sig";
+                        Signature s = loadSUSigFile(filename);
+                        if (s!= null) genuine.get(i).add(s);
+                    }
+                }
+
+                forgery.add(0, new LinkedList<Signature>());
+                for (int i=1; i<=k; ++i)
+                {
+                    forgery.add(i, new LinkedList<Signature>());
+                    for (int j=1; j<=5; ++j)
+                    {
+                        String filename = String.format("%03d", i) + "_f_" + j + ".sig";
+                        Signature s = loadSUSigFile(filename);
+                        if (s!= null) forgery.get(i).add(s);
+                    }
+                }
+
+                skilled.add(0, new LinkedList<Signature>());
+                for (int i=1; i<=k; ++i)
+                {
+                    skilled.add(i, new LinkedList<Signature>());
+                    for (int j=6; j<=10; ++j)
+                    {
+                        String filename = String.format("%03d", i) + "_f_" + j + ".sig";
+                        Signature s = loadSUSigFile(filename);
+                        if (s!= null) skilled.get(i).add(s);
+                    }
+                }*/
+
+                LinkedList<Signature> ks = new LinkedList<>();
+                for (int i=1; i<=5; ++i)
+                {
+                    String filename = "KS" + i + ".txt";
+                    Signature s = readSigFromFile(filename, false, false);
+                    ks.add(s);
+                }
+
+                Signature template = Signature.templateSignature(ks, 5);
+
+                writeSigToFile("KS_TEMPLATE", template, false, false);
+
+                template.print();
+
+
+
+
+
+
+
+
+                //Signature sig3 = readSigFromFile("001_3_1.sig", false, false);
+
+
 
 
                 //sig1.print();
@@ -207,25 +254,6 @@ public class MainActivity extends AppCompatActivity
             {
                 e.printStackTrace();
             }
-
-
-
-            /*synchronized (lock)
-            {
-                mSpenPageDoc.setCurrentLayer(BACKGROUND_LAYER);
-                Toast.makeText(mContext, "CLR bckgl" + mSpenPageDoc.getObjectCount(true), Toast.LENGTH_LONG).show();
-
-
-                ArrayList <SpenObjectBase> imgList = mSpenPageDoc.getObjectList(SpenPageDoc.FIND_TYPE_IMAGE);
-
-                for (SpenObjectBase img : imgList)
-                {
-                    mSpenPageDoc.removeObject(img);
-                }
-
-                mSpenSurfaceView.update();
-                mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
-            }*/
         }
     };
 
@@ -416,6 +444,22 @@ public class MainActivity extends AppCompatActivity
             }
             mSpenSurfaceView.update();
         }
+        /*synchronized (lock)
+            {
+                mSpenPageDoc.setCurrentLayer(BACKGROUND_LAYER);
+                Toast.makeText(mContext, "CLR bckgl" + mSpenPageDoc.getObjectCount(true), Toast.LENGTH_LONG).show();
+
+
+                ArrayList <SpenObjectBase> imgList = mSpenPageDoc.getObjectList(SpenPageDoc.FIND_TYPE_IMAGE);
+
+                for (SpenObjectBase img : imgList)
+                {
+                    mSpenPageDoc.removeObject(img);
+                }
+
+                mSpenSurfaceView.update();
+                mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
+            }*/
     }
 
     /* zapisuje obecny podpis do pliku, z opcją szyfrowania, MODE_PRIVATE*/
@@ -432,7 +476,7 @@ public class MainActivity extends AppCompatActivity
         else
         {
             File mainDir = getFilePath();
-            String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
+            String filePath = mainDir.getAbsolutePath() + "/" + filename;
             fos = new FileOutputStream(filePath);
         }
         fos.write(sigBytes);
@@ -455,7 +499,7 @@ public class MainActivity extends AppCompatActivity
         else
         {
             File mainDir = getFilePath();
-            String filePath = mainDir.getAbsolutePath() + "/" + filename + ".txt";
+            String filePath = mainDir.getAbsolutePath() + "/" + filename;
             File file = new File(filePath);
 
             b = new byte[(int) file.length()];

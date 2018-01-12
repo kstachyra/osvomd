@@ -12,6 +12,10 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import static java.lang.Math.abs;
+import static ks.pdi1.Constants.SIGNATURE_TIME_LIMIT;
+import static ks.pdi1.Constants.SIGNATURE_TIME_WEIGHT;
+
 public class Signature
 {
     /* nazwa podpisu, zawierająca ID oraz dokładną datę*/
@@ -116,13 +120,10 @@ public class Signature
         int hidIdx = 0;
         for (Signature h : hiddenSignatures)
         {
-            Log.d("pdi.kkk", "indeks " + hidIdx + " wyniki dlan");
             for (Signature e : entrollmentSignatures)
             {
 
                 double newScore = new DTW<Point>(h.getPointArray(), e.getPointArray()).getWarpingDistance();
-                Log.d("pdi.kkk", "newScore, czyli wynik porównania " + newScore);
-
                 if (newScore > worstScores[hidIdx]) worstScores[hidIdx] = newScore;
             }
             ++hidIdx;
@@ -255,14 +256,19 @@ public class Signature
      */
     static public double compare(Signature sig1, Signature sig2)
     {
-        double value = Double.MAX_VALUE;
+        DTW<Point> dtw = new DTW<>(sig1.getPointArray(), sig2.getPointArray());
 
-        DTW<Point> dtw = new DTW<>(sig1.points.toArray(new Point[0]), sig2.points.toArray(new Point[0]));
-        Log.d("pdi.SignatureDTW", dtw.toString());
-        Log.d("pdi.SignatureDTW", "warpingDist " + dtw.warpingDistance + " dist " + dtw.accumulatedDist);
+        double value = dtw.warpingDistance;
 
+        long timeDif = abs(sig1.getSignatureTime() - sig2.getSignatureTime()) / ((sig1.getSignatureTime() + sig2.getSignatureTime())/2);
+        Log.d("pdi.kkk", "Stare value " + value);
+        if(timeDif > SIGNATURE_TIME_LIMIT)
+        {
+            value += (timeDif-SIGNATURE_TIME_LIMIT)*SIGNATURE_TIME_WEIGHT;
+        }
+        Log.d("pdi.kkk", "nowe value " + value);
+        
         //TODO ustalenie wyniku, wartości jakie wpływają na wynik porównania
-
         return value;
     }
 
@@ -292,7 +298,7 @@ public class Signature
                 this.clearBeginEnd();
                 this.resize();
                 this.reTime();
-                Log.d("pdi.signature", "signature normalized");
+                //Log.d("pdi.signature", "signature normalized");
             } else
             {
                 Log.d("pdi.signature", "can't normalize, !points.size > 0");
@@ -455,7 +461,6 @@ public class Signature
     {
         return points.get(points.size()-1).time;
     }
-
 
     public void setID(String id)
     {
