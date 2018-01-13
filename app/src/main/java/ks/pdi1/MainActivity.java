@@ -40,7 +40,6 @@ import com.samsung.android.sdk.pen.engine.SpenTouchListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -87,7 +86,7 @@ public class MainActivity extends AppCompatActivity
             if (event.getToolType(0) == SpenSurfaceView.TOOL_SPEN)
             {
                 mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
-                Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
+                //Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
                 sig.addPoint(System.currentTimeMillis(), event.getX(), event.getY(), event.getPressure());
                 return true;
             }
@@ -103,7 +102,7 @@ public class MainActivity extends AppCompatActivity
             if (event.getToolType(0) == SpenSurfaceView.TOOL_SPEN)
             {
                 mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
-                Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
+                //Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
                 sig.addPoint(System.currentTimeMillis(), event.getX(), event.getY(), event.getPressure());
                 return true;
             }
@@ -123,10 +122,11 @@ public class MainActivity extends AppCompatActivity
             try
             {
                 sig.setID(ID);
-                writeSigToFile(sig.name + "_RAW", sig, false, false);
+                writeSigToFile(sig.name + "_RAW.txt", sig, false, false);
                 sig.normalize();
-                writeSigToFile(sig.name, sig, false, false);
+                writeSigToFile(sig.name + ".txt", sig, false, false);
                 captureSpenSurfaceView(sig.name);
+                //Toast.makeText(mContext, String.valueOf(sig.getSignatureTime()), Toast.LENGTH_SHORT).show();
                 clearCurrentSig();
             } catch (Exception e)
             {
@@ -170,12 +170,12 @@ public class MainActivity extends AppCompatActivity
             //Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
             clearCurrentSig();
 
-            ArrayList<LinkedList<Signature>> genuine = new ArrayList<>();
+            /*ArrayList<LinkedList<Signature>> genuine = new ArrayList<>();
             ArrayList<LinkedList<Signature>> forgery = new ArrayList<>();
-            ArrayList<LinkedList<Signature>> skilled = new ArrayList<>();
+            ArrayList<LinkedList<Signature>> skilled = new ArrayList<>();*/
             try
             {
-                //liczba badanych podpisów
+                /*//liczba badanych podpisów
                 final int k = 10;
 
                 genuine.add(0, new LinkedList<Signature>());
@@ -322,6 +322,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 ID = input.getText().toString();
+                ID = ID.replace(" ", "");
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
