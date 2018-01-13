@@ -40,6 +40,7 @@ import com.samsung.android.sdk.pen.engine.SpenTouchListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -48,6 +49,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 
@@ -173,8 +175,8 @@ public class MainActivity extends AppCompatActivity
             ArrayList<LinkedList<Signature>> skilled = new ArrayList<>();
             try
             {
-                /*//liczba badanych podpisów
-                final int k = 20;
+                //liczba badanych podpisów
+                final int k = 10;
 
                 genuine.add(0, new LinkedList<Signature>());
                 for (int i=1; i<=k; ++i)
@@ -210,21 +212,67 @@ public class MainActivity extends AppCompatActivity
                         Signature s = loadSUSigFile(filename);
                         if (s!= null) skilled.get(i).add(s);
                     }
-                }*/
-
-                LinkedList<Signature> ks = new LinkedList<>();
-                for (int i=1; i<=5; ++i)
-                {
-                    String filename = "KS" + i + ".txt";
-                    Signature s = readSigFromFile(filename, false, false);
-                    ks.add(s);
                 }
 
-                Signature template = Signature.templateSignature(ks, 5);
+                int ping = 0;
+                List<Double> sameScores = new LinkedList<>();
+                List<Double> otherScores = new LinkedList<>();
+                for (int i=1; i<=k; ++i)
+                {
+                    for (int j=1; j<=k; ++j)
+                    {
+                        Log.d("pdi.kkk", "PING " + ++ping + "/" + k*k);
+                        if (i==j)
+                        {
+                            //ta sama klasa
+                            for (Signature s1 : genuine.get(i))
+                            {
+                                for (Signature s2 : genuine.get(j))
+                                {
+                                    sameScores.add(Signature.compare(s1, s2));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //inna klasa
+                            for (Signature s1 : genuine.get(i))
+                            {
+                                for (Signature s2 : genuine.get(j))
+                                {
+                                    otherScores.add(Signature.compare(s1, s2));
+                                }
+                            }
+                        }
+                    }
+                }
 
-                writeSigToFile("KS_TEMPLATE", template, false, false);
+                writeToFile("same", sameScores.toString());
+                writeToFile("other", otherScores.toString());
 
-                template.print();
+                Log.d("pdi.kkk", sameScores.toString());
+                Log.d("pdi.kkk", otherScores.toString());
+
+
+                /*
+                LinkedList<Signature> templates = new LinkedList<>();
+                //ile podpisów do wzorca
+                final int tNr = 3;
+                templates.add(null);
+                for (List<Signature> sigList : genuine)
+                {
+                    if (sigList.size() > 0)
+                    {
+                        List<Signature> temp = new LinkedList<>();
+                        for (int i=0; i<tNr; ++i)
+                        {
+                            temp.add(sigList.get(tNr));
+                        }
+                        templates.add(Signature.templateSignature(temp, 10));
+                    }
+                    Log.d("pdi.kkk", "jeden template zrobiony...");
+                }*/
+
 
 
 
@@ -462,6 +510,18 @@ public class MainActivity extends AppCompatActivity
             }*/
     }
 
+    private void writeToFile(String filename, String s) throws OSVOMDStorageException, IOException
+    {
+        byte[] bytes = s.getBytes();
+        File mainDir = getFilePath();
+        String filePath = mainDir.getAbsolutePath() + "/" + filename;
+        FileOutputStream fos = new FileOutputStream(filePath);
+
+        fos.write(bytes);
+        fos.close();
+
+    }
+
     /* zapisuje obecny podpis do pliku, z opcją szyfrowania, MODE_PRIVATE*/
     private void writeSigToFile(String filename, Signature signature, boolean encrypted, boolean modePrivate) throws OSVOMDStorageException, IOException, Exception
     {
@@ -527,7 +587,7 @@ public class MainActivity extends AppCompatActivity
         FileInputStream is;
         BufferedReader br;
         File mainDir = getFilePath();
-        final File file = new File(mainDir.getAbsolutePath() + "/" + filename);
+        final File file = new File(mainDir.getAbsolutePath() + "/SUSig/" + filename);
 
         //wszystkie linie pliku
         LinkedList<String> lines = new LinkedList<String>();

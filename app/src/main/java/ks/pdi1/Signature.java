@@ -261,13 +261,13 @@ public class Signature
         double value = dtw.warpingDistance;
 
         long timeDif = abs(sig1.getSignatureTime() - sig2.getSignatureTime()) / ((sig1.getSignatureTime() + sig2.getSignatureTime())/2);
-        Log.d("pdi.kkk", "Stare value " + value);
+        //Log.d("pdi.kkk", "Stare value " + value);
         if(timeDif > SIGNATURE_TIME_LIMIT)
         {
             value += (timeDif-SIGNATURE_TIME_LIMIT)*SIGNATURE_TIME_WEIGHT;
         }
-        Log.d("pdi.kkk", "nowe value " + value);
-        
+        //Log.d("pdi.kkk", "nowe value " + value);
+
         //TODO ustalenie wyniku, wartości jakie wpływają na wynik porównania
         return value;
     }
