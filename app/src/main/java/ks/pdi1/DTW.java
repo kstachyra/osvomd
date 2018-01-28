@@ -37,6 +37,7 @@ public class DTW <T extends DTW.Distancable>
     }
 
     /**wyliczanie ścieżki marszczenia i wartości odległości*/
+    @SuppressWarnings("unchecked")
     public void compute()
     {
         double accumulatedDistance = 0.0;
@@ -169,7 +170,7 @@ public class DTW <T extends DTW.Distancable>
     }
 
     /**interfejs do zwracania odległości między dwoma obiektami*/
-    public interface Distancable<T extends Distancable>
+    public interface Distancable<T extends Distancable<?>>
     {
         double distance(T other);
     }
@@ -188,10 +189,8 @@ public class DTW <T extends DTW.Distancable>
             {
                 Log.d("pdi.DTW", i + " " + j + " ->> " + dtw.warpingPath[i][j]);
             }
-        }
+        }*/
 
-        Log.d("pdi.DTW","Accumulated distance between the series is :  " + dtw.getAccumulatedDistance());
-        Log.d("pdi.DTW","Warping Distance is between the series is :  " + dtw.getWarpingDistance());*/
-        Log.d("pdi.DTW", dtw.toString());
+        dtw.toString();
     }
 }

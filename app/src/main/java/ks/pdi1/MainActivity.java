@@ -86,7 +86,6 @@ public class MainActivity extends AppCompatActivity
             if (event.getToolType(0) == SpenSurfaceView.TOOL_SPEN)
             {
                 mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
-                //Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
                 sig.addPoint(System.currentTimeMillis(), event.getX(), event.getY(), event.getPressure());
                 return true;
             }
@@ -102,7 +101,6 @@ public class MainActivity extends AppCompatActivity
             if (event.getToolType(0) == SpenSurfaceView.TOOL_SPEN)
             {
                 mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
-                //Log.d("pdi.sigdata", event.getX() + " " + event.getY() + " " + event.getPressure());
                 sig.addPoint(System.currentTimeMillis(), event.getX(), event.getY(), event.getPressure());
                 return true;
             }
@@ -639,7 +637,6 @@ public class MainActivity extends AppCompatActivity
         }
         newSig.setID(filename);
         newSig.normalize();
-        newSig.rePress();
 
         return newSig;
     }
@@ -703,7 +700,6 @@ public class MainActivity extends AppCompatActivity
         }
         newSig.setID(filename);
         newSig.normalize();
-        newSig.rePress();
         return newSig;
     }
 

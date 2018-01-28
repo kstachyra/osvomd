@@ -2,12 +2,15 @@ package ks.pdi1;
 
 import android.annotation.SuppressLint;
 import android.support.annotation.Nullable;
+import android.support.v4.util.Pair;
 import android.util.Log;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,13 +31,13 @@ public class Signature
     public Signature()
     {
         this.name = rename();
-        this.points = new LinkedList<Point>();
+        this.points = new ArrayList<Point>();
     }
 
     public Signature (byte[] b)
     {
         this.name = rename();
-        this.points = new LinkedList<Point>();
+        this.points = new ArrayList<Point>();
 
         getDataFromBytes(b);
     }
@@ -52,20 +55,35 @@ public class Signature
         }
     }
 
-    /**z listy podpisów tworzy jeden wzorzec
+    /**
+     * z listy podpisów tworzy jeden wzorzec
      * IPPA algorithm
      * @param signatures enrollment signatures
+     * @param firstTemplate first sginature for calculating
+     * @param maxInterations
      * @return templateSignature
      */
-    static public Signature templateSignature(List<Signature> signatures, int maxInterations)
+    static public Signature templateSignature(List<Signature> signatures, Signature firstTemplate, int maxInterations)
     {
+        if (signatures.isEmpty())
+        {
+            return null;
+        }
+
         Signature template = new Signature();
 
-        //kopia listy signatures
         List<Signature> hiddenSignatures = new LinkedList<Signature>();
-        for (Signature s : signatures)
+        if (firstTemplate == null)
         {
-            hiddenSignatures.add(new Signature(s));
+            //kopia listy signatures
+            for (Signature s : signatures)
+            {
+                hiddenSignatures.add(new Signature(s));
+            }
+        }
+        else //istnieje jeden podpis początkowy
+        {
+            hiddenSignatures.add(firstTemplate);
         }
 
         //macierz sprawdzania warunku stopu, przechowuje informacje o poprzednich wynikach marszczenia
@@ -97,7 +115,7 @@ public class Signature
                 newHidden.add(averageSignature(inHiddenTime));
                 ++hidIdx;
             }
-            hiddenSignatures = newHidden;
+            hiddenSignatures = newHidden; //może być jeden tylko, w odpowiednich trybach
 
             //nic się już nie zmieniło
             if (stop) break;
@@ -113,8 +131,11 @@ public class Signature
      * @param entrollmentSignatures podpisy na podstawie których wybieramy
      * @return najlepszy podpis
      */
-    private static Signature pickBestSignature(List<Signature> hiddenSignatures, List<Signature> entrollmentSignatures)
+    public static Signature pickBestSignature(List<Signature> hiddenSignatures, List<Signature> entrollmentSignatures)
     {
+        //jeden to on jest najlepszy
+        if (hiddenSignatures.size() == 1) return hiddenSignatures.get(0);
+
         double[] worstScores = new double[hiddenSignatures.size()];
 
         int hidIdx = 0;
@@ -123,7 +144,7 @@ public class Signature
             for (Signature e : entrollmentSignatures)
             {
 
-                double newScore = new DTW<Point>(h.getPointArray(), e.getPointArray()).getWarpingDistance();
+                double newScore = Signature.compare(e, h, false);
                 if (newScore > worstScores[hidIdx]) worstScores[hidIdx] = newScore;
             }
             ++hidIdx;
@@ -139,7 +160,7 @@ public class Signature
                 pickIdx = i;
             }
         }
-        Log.d("pdi.kkk", "wybrano podpis o inx " + pickIdx + "który miał najgorszą wartość jedynie " + bestScore);
+        //System.out.println("pdi.kkk." + "wybrano podpis o inx " + pickIdx + "który miał najgorszą wartość jedynie " + bestScore);
         return hiddenSignatures.get(pickIdx);
     }
 
@@ -148,8 +169,7 @@ public class Signature
      * @param inHiddenTime lista podpisów zgodnie zmarszczonych
      * @return średni podpis, null gdy różne czasy
      */
-    @Nullable
-    private static Signature averageSignature(final LinkedList<Signature> inHiddenTime)
+    public static Signature averageSignature(final LinkedList<Signature> inHiddenTime)
     {
         //spr czy równe długosci podpisów
         int size = inHiddenTime.getFirst().points.size();
@@ -157,7 +177,7 @@ public class Signature
         {
             if (s.points.size() != size)
             {
-                Log.d("pdi.signature.err", "different signatures size!");
+                System.out.println("pdi.signature.err" + "different signatures size!");
                 return null;
             }
         }
@@ -196,7 +216,7 @@ public class Signature
      * @param score zmienna, w której zapisywany jest wynik marszczenia
      * @return nowy zmarszczony podpis w czasie podpisu timeSig
      */
-    private Signature warpToTime(final Signature timeSig, double[] score)
+    public Signature warpToTime(final Signature timeSig, double[] score)
     {
         Signature newSig = new Signature();
 
@@ -248,44 +268,195 @@ public class Signature
         return newSig;
     }
 
-    /**porównuje dwa podpisy
-     *
-     * @param sig1 pierwszy podpis
-     * @param sig2 drugi podpis
-     * @return comaprison value (more -> more different signatures)
-     */
-    static public double compare(Signature sig1, Signature sig2)
+    /** tworzy jeden początkowy podpis, będący średnim podpisem, o średnim czasie trwania*/
+    public static Signature firstTemplateAverage(final LinkedList<Signature> signatures)
     {
-        DTW<Point> dtw = new DTW<>(sig1.getPointArray(), sig2.getPointArray());
-
-        double value = dtw.warpingDistance;
-
-        long timeDif = abs(sig1.getSignatureTime() - sig2.getSignatureTime()) / ((sig1.getSignatureTime() + sig2.getSignatureTime())/2);
-        //Log.d("pdi.kkk", "Stare value " + value);
-        if(timeDif > SIGNATURE_TIME_LIMIT)
+        //wylicza średni czas i reparametryzuje podpisy do tego czasu, potem uśrednia
+        int averagePoints = 0;
+        int noSigs = 0;
+        for (Signature s : signatures)
         {
-            value += (timeDif-SIGNATURE_TIME_LIMIT)*SIGNATURE_TIME_WEIGHT;
+            averagePoints += s.points.size();
+            ++noSigs;
         }
-        //Log.d("pdi.kkk", "nowe value " + value);
+        averagePoints = averagePoints / noSigs;
 
-        //TODO ustalenie wyniku, wartości jakie wpływają na wynik porównania
-        return value;
+        //nowa lista zmienionych w czasie
+        LinkedList<Signature> sameTimeSigs = new LinkedList<>();
+        for (Signature s : signatures)
+        {
+            sameTimeSigs.add(reparametrize(s, averagePoints, false));
+        }
+
+        Signature firstTemplateAverage = Signature.averageSignature(sameTimeSigs);
+
+        return firstTemplateAverage;
     }
 
-    /**porównuje obecny podpis z podanym w parametrze
+    /** tworzy jeden początkowy podpis, będący podpisem z puli o czasie trwania, który jest medianą czaasów*/
+    public static Signature firstTemplateMedian(LinkedList<Signature> signatures)
+    {
+        //dla wszystkich podpisów, wybiera ten o czasie będącym medianą wszystkich czasów
+        LinkedList<Pair<Integer, Integer>> pointsToIndex = new LinkedList<>();
+        for (int i=0; i<signatures.size(); ++i)
+        {
+            Signature s = signatures.get(i);
+            if (s != null)
+            {
+                System.out.println(s.points.size() + " -> " + i);
+                pointsToIndex.add(new Pair<Integer, Integer>(s.points.size(), i));
+            }
+        }
+
+        Collections.sort(pointsToIndex, new Comparator<Pair<Integer, Integer>>()
+        {
+            @Override
+            public int compare(Pair<Integer, Integer> arg0, Pair<Integer, Integer> arg1)
+            {
+                if (arg0.first > arg1.first)
+                {
+                    return 1;
+                }
+                else if (arg0.first < arg1.first)
+                {
+                    return -1;
+                }
+
+                return 0;
+            }
+        });
+
+        //do parzystych list dodajemy na końcu cokolwiek
+        if (pointsToIndex.size() %2 == 0)
+        {
+            pointsToIndex.add(new Pair<Integer, Integer>(0, -1));
+        }
+
+        for (int i =0; i<pointsToIndex.size(); ++i)
+        {
+            System.out.println(pointsToIndex.get(i).first + " -> " +pointsToIndex.get(i).first);
+        }
+
+        //index podpisu mediany czasu
+        Integer pickedIndex = pointsToIndex.get(((pointsToIndex.size() - 1) / 2) - 1).first;
+
+        System.out.println("PICKED" + pickedIndex);
+
+        Signature firstTemplateMedian = null;
+        if (pickedIndex != -1)
+        {
+            firstTemplateMedian = new Signature(signatures.get(pickedIndex));
+        }
+        else
+        {
+            System.out.println("ERROR firstTemplateMedian!");
+        }
+
+        return firstTemplateMedian;
+    }
+
+    /**porównuje dwa podpisy
+     *
+     * @param veryfied pierwszy podpis
+     * @param template drugi podpis
+     * @return comaprison value (more -> more different signatures)
+     */
+    static public double compare(final Signature veryfied, final Signature template, boolean otherAproach)
+    {
+        if (!otherAproach)
+        {
+            DTW<Point> dtw = new DTW<>(veryfied.getPointArray(), template.getPointArray());
+
+            double value = dtw.warpingDistance;
+
+            double timeDif = abs((double)veryfied.getSignatureTime() - (double)template.getSignatureTime()) / (double)template.getSignatureTime();
+
+            if(timeDif > SIGNATURE_TIME_LIMIT)
+            {
+                value += timeDif*SIGNATURE_TIME_WEIGHT;
+            }
+            return value;
+        }
+        else
+        {
+            double value = Double.MAX_VALUE;
+
+            //TODO other Aproach
+
+            return value;
+        }
+    }
+
+    /**porównuje obecny podpis z podanym w parametrze klasyczną metodą
      *
      * @param other signature
      * @return omaprison value (more -> more different signatures)
      */
     public double compareTo(Signature other)
     {
-        return Signature.compare(this, other);
+        return Signature.compare(this, other, false);
+    }
+
+    public static String linearCompare(Signature sig1, Signature sig2)
+    {
+        Signature temp = Signature.reparametrize(sig1, sig2.points.size(), false);
+
+
+
+        double maxX = 0, maxY = 0, maxPress = 0;
+        double varX = 0, varY = 0, varPress = 0;
+
+        double X = 0, Y=0, press=0;
+        for (int i=0; i<temp.points.size(); ++i)
+        {
+            if (Math.abs(temp.points.get(i).x - sig2.points.get(i).x) > maxX)
+                maxX = Math.abs(temp.points.get(i).x - sig2.points.get(i).x);
+
+            if (Math.abs(temp.points.get(i).y - sig2.points.get(i).y) > maxY)
+                maxY = Math.abs(temp.points.get(i).y - sig2.points.get(i).y);
+
+            if (Math.abs(temp.points.get(i).press - sig2.points.get(i).press) > maxPress)
+                maxPress = Math.abs(temp.points.get(i).press - sig2.points.get(i).press);
+
+            X += Math.abs(temp.points.get(i).x - sig2.points.get(i).x);
+            Y += Math.abs(temp.points.get(i).y - sig2.points.get(i).y);
+            press += Math.abs(temp.points.get(i).press - sig2.points.get(i).press);
+        }
+        X /= temp.points.size();
+        Y /= temp.points.size();
+        press /= temp.points.size();
+
+        for (int i=0; i<temp.points.size(); ++i)
+        {
+            varX += Math.pow((Math.abs(temp.points.get(i).x - sig2.points.get(i).x)) - X, 2);
+            varY += Math.pow((Math.abs(temp.points.get(i).y - sig2.points.get(i).y)) - Y, 2);
+            varPress += Math.pow((Math.abs(temp.points.get(i).press - sig2.points.get(i).press)) - press, 2);
+        }
+
+        varX /= temp.points.size();
+        varY /= temp.points.size();
+        varPress /= temp.points.size();
+
+        return X + "\t" + Y + "\t" + press + "\t" + maxX + "\t" + maxY + "\t" + maxPress + "\t" + varX + "\t" + varY + "\t" + varPress;
+    }
+
+    public static String linearDTWComapre(Signature sig1, Signature sig2)
+    {
+        Signature temp = Signature.reparametrize(sig1, sig2.points.size(), false);
+
+        return String.valueOf(temp.compareTo(sig2));
     }
 
     /**dodaje punkt do podpisu*/
     public void addPoint(long time, double x, double y, double press)
     {
         points.add(new Point(time, x, y, press));
+    }
+
+    /**dodaje punkt do podpisu*/
+    public void addPoint(Point p)
+    {
+        points.add(p);
     }
 
     /*przekształca surowy zbiór punktów na znormalizowany*/
@@ -298,16 +469,66 @@ public class Signature
                 this.clearBeginEnd();
                 this.resize();
                 this.reTime();
-                //Log.d("pdi.signature", "signature normalized");
+                this.rePress();
+                //System.out.println("pdi.signature" + "signature normalized");
             } else
             {
-                Log.d("pdi.signature", "can't normalize, !points.size > 0");
+                System.out.println("pdi.signature" + "can't normalize, !points.size > 0");
             }
+
+            reparametrize(this, this.points.size(), true);
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
+    }
+
+    /*zeruje obecny podpis, uaktualnia datę w nazwie*/
+    public void clear()
+    {
+        try
+        {
+            rename();
+            points.clear();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    /*zwraca podpis jako ciąg bajtów*/
+    public byte[] getSigBytes()
+    {
+        return this.getSigString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /*wyświetla w Log listę punktów podpisu*/
+    public void print()
+    {
+        for (Point p : points)
+        {
+            System.out.println("pdi.signature.\t" + p.toString());
+        }
+    }
+
+    /**zwraca tablice Point[] punktów podpisu*/
+    public Point[] getPointArray()
+    {
+        return points.toArray(new Point[0]);
+    }
+
+    /**zwraca czas trwania podpisu*/
+    public long getSignatureTime()
+    {
+        return points.get(points.size()-1).time;
+    }
+
+    public void setID(String id)
+    {
+        this.ID = id;
+        rename();
     }
 
     /*zwraca podpis jako pojedynczy string*/
@@ -373,9 +594,8 @@ public class Signature
         }
     }
 
-    /*standaryzuje wartości nacisku od 0 d 1
-    * dla innych zestawów danych niż przygotowane surowe na urządzeniu*/
-    public void rePress()
+    /*standaryzuje wartości nacisku od 0 d 1*/
+    private void rePress()
     {
         //znajdź min i max wartości punktów
         double min = Double.MAX_VALUE;
@@ -399,31 +619,54 @@ public class Signature
     private String rename()
     {
         Date currentDate = Calendar.getInstance().getTime();
-        @SuppressLint("SimpleDateFormat") SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd__HH_mm_ss");
         String stringDate = formatter.format(currentDate);
         stringDate = ID + stringDate;
         name = stringDate;
         return stringDate;
     }
 
-    /*zeruje obecny podpis, uaktualnia datę w nazwie*/
-    public void clear()
+    private static Signature reparametrize(Signature orig, long targetNoPoints, boolean changeOriginal)
     {
-        try
-        {
-            rename();
-            points.clear();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
+        //reparametryzuje kopię podpisu do określonej liczby punktów
+        Signature newSig = new Signature();
 
-    /*zwraca podpis jako ciąg bajtów*/
-    public byte[] getSigBytes()
-    {
-        return this.getSigString().getBytes(StandardCharsets.UTF_8);
+        //indeksy punktów oryginalnego
+        int prev = 0;
+        int next = 0;
+
+        long timeStep = orig.getSignatureTime() / (targetNoPoints - 1);
+        long newPointTime = 0;
+
+        for (int i=0; i<targetNoPoints; ++i)
+        {
+            while (orig.points.get(next).time <= newPointTime && next!=orig.points.size()-1)
+            {
+                ++next;
+            }
+            if (next != 0) prev = next -1;
+
+            double prevDist = newPointTime - orig.points.get(prev).time;
+            double nextDist = orig.points.get(next).time - newPointTime;
+
+            double prop = 0;
+            if(prevDist + nextDist > 0) prop = prevDist / (prevDist + nextDist);
+
+            Point prevP = orig.points.get(prev);
+            Point nextP = orig.points.get(next);
+
+            newSig.addPoint(newPointTime, prevP.x + prop*(nextP.x - prevP.x) , prevP.y + prop*(nextP.y - prevP.y),
+                    prevP.press + prop*(nextP.press - prevP.press));
+
+            newPointTime += timeStep;
+        }
+
+        if(changeOriginal)
+        {
+            orig = newSig;
+        }
+
+        return newSig;
     }
 
     /*ustawia punkty podpisu na podstawie danych z tablicy bajtów (zgodnie z getSigBytes*/
@@ -439,32 +682,5 @@ public class Signature
                 this.addPoint(Long.parseLong(values[0]), Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3]));
             }
         }
-    }
-
-    /*wyświetla w Log listę punktów podpisu*/
-    public void print()
-    {
-        for (Point p : points)
-        {
-            Log.d("pdi.signature", p.toString());
-        }
-    }
-
-    /**zwraca tablice Point[] punktów podpisu*/
-    public Point[] getPointArray()
-    {
-        return points.toArray(new Point[0]);
-    }
-
-    /**zwraca czas trwania podpisu*/
-    public long getSignatureTime()
-    {
-        return points.get(points.size()-1).time;
-    }
-
-    public void setID(String id)
-    {
-        this.ID = id;
-        rename();
     }
 }
