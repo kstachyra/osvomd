@@ -93,11 +93,14 @@ public class Signature
         boolean stop = false;
         for (int i=0; i<maxInterations; ++i)
         {
+
             stop = true;
             LinkedList<Signature> newHidden = new LinkedList<Signature>();
             int hidIdx = 0;
+
             for (Signature hid : hiddenSignatures)
             {
+                Log.d("pdi", signatures.size() + "\t" + (i+1) + "/" + MAX_TEMPLATE_ITERATIONS);
                 int sigIdx = 0;
                 LinkedList<Signature> inHiddenTime = new LinkedList<Signature>();
                 for (Signature sig : signatures) //dla każdej pary
@@ -112,6 +115,11 @@ public class Signature
                     ++sigIdx;
                 }
                 newHidden.add(averageSignature(inHiddenTime));
+
+
+
+
+
                 ++hidIdx;
             }
             hiddenSignatures = newHidden; //może być jeden tylko, w odpowiednich trybach
@@ -170,7 +178,7 @@ public class Signature
     public static Signature averageSignature(final LinkedList<Signature> inHiddenTime)
     {
         //spr czy równe długosci podpisów
-        int size = inHiddenTime.getFirst().points.size();
+        int size = inHiddenTime.get(0).points.size();
         for (Signature s : inHiddenTime)
         {
             if (s.points.size() != size)
@@ -330,7 +338,7 @@ public class Signature
         }
 
         //index podpisu mediany czasu
-        Integer pickedIndex = pointsToIndex.get(((pointsToIndex.size() - 1) / 2) - 1).first;
+        Integer pickedIndex = pointsToIndex.get(((pointsToIndex.size() - 1) / 2) - 1).second;
 
         Signature firstTemplateMedian = null;
         if (pickedIndex != -1)
@@ -454,18 +462,21 @@ public class Signature
     {
         try
         {
+            this.clearBeginEnd();
+
             if (this.points.size() > 0)
             {
-                this.clearBeginEnd();
                 this.resize();
                 this.reTime();
                 this.rePress();
+
+                reparametrize(this, this.points.size(), true);
             } else
             {
                 Log.d("pdi.signature", "can't normalize, !points.size > 0");
             }
 
-            reparametrize(this, this.points.size(), true);
+
         }
         catch (Exception e)
         {
@@ -676,26 +687,50 @@ public class Signature
     public static Signature createTemplate(LinkedList<Signature> signatures, HMode mode)
     {
         Signature firstTemplate = null;
+
+        LinkedList<Signature> toDelete = new LinkedList<>();
+        for (Signature s : signatures)
+        {
+            if (s.isEmpty()) toDelete.add(s);
+        }
+        signatures.removeAll(toDelete);
+
         if (!signatures.isEmpty())
         {
-            if (mode == HMode.ALL)
+
+            if (mode == HMode.H_ALL)
             {
                 firstTemplate = null;
             }
-            else if (mode == HMode.BEST)
+            else if (mode == HMode.H_BEST)
             {
                 firstTemplate = Signature.pickBestSignature(signatures, signatures);
             }
-            else if (mode == HMode.AVERAGE)
+            else if (mode == HMode.H_AVERAGE)
             {
                 firstTemplate = Signature.firstTemplateAverage(signatures);
             }
-            else if (mode == HMode.MEDIAN)
+            else if (mode == HMode.H_MEDIAN)
             {
                 firstTemplate = Signature.firstTemplateMedian(signatures);
             }
+            else if (mode == HMode.BEST)
+            {
+                return Signature.pickBestSignature(signatures, signatures);
+            }
+            else if (mode == HMode.ADTW)
+            {
+                return Signature.averageSignature(signatures);
+            }
+
         }
 
         return Signature.templateSignature(signatures, firstTemplate, MAX_TEMPLATE_ITERATIONS);
+    }
+
+    public boolean isEmpty()
+    {
+        if (this.points.size() > 0) return false;
+        return true;
     }
 }

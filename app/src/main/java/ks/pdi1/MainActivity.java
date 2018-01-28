@@ -12,6 +12,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
@@ -25,6 +26,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -70,6 +72,9 @@ public class MainActivity extends AppCompatActivity
 
     /*this context*/
     private Context mContext;
+
+    /*progress bar*/
+    private ProgressBar spinner;
 
     /*obsługa Spen*/
     private SpenNoteDoc mSpenNoteDoc;
@@ -159,25 +164,32 @@ public class MainActivity extends AppCompatActivity
 
             try
             {
-                sig.setID(ID);
-                writeSigToFile("_FORGERY_" + sig.name + "_RAW.txt", sig, false, false);
                 sig.normalize();
-                writeSigToFile("_FORGERY_" + sig.name + ".txt", sig, false, false);
-
-                double score = Signature.compare(sig, tmp, false);
-
-                if (score < THRESHOLD)
+                if (sig.isEmpty())
                 {
-                    Toast.makeText(mContext, "OK! :) " + score, Toast.LENGTH_LONG).show();
+                    Toast.makeText(mContext, "please sign", Toast.LENGTH_SHORT).show();
+                }
+                else if(tmp.isEmpty())
+                {
+                    Toast.makeText(mContext, "no template", Toast.LENGTH_SHORT).show();
                 }
                 else
                 {
-                    Toast.makeText(mContext, ":( NIE OK :( " + score, Toast.LENGTH_LONG).show();
+                    writeSigToFile("_FORGERY_" + sig.name + ".txt", sig, false, false);
+
+                    double score = Signature.compare(sig, tmp, false);
+
+                    if (score < THRESHOLD)
+                    {
+                        Toast.makeText(mContext, "OK! :) " + score, Toast.LENGTH_LONG).show();
+                    } else
+                    {
+                        Toast.makeText(mContext, ":( NIE OK :( " + score, Toast.LENGTH_LONG).show();
+                    }
+
+                    captureSpenSurfaceView("_FORGERY_" + sig.name);
+                    clearCurrentSig();
                 }
-
-                captureSpenSurfaceView("_FORGERY_" + sig.name);
-                clearCurrentSig();
-
             } catch (Exception e)
             {
                 e.printStackTrace();
@@ -196,16 +208,14 @@ public class MainActivity extends AppCompatActivity
             {
                 LinkedList<Signature> templateSigs = loadSigsForTemplate(ID, MAX_TEMPLATE_SIGS);
 
-
-                if (templateSigs.size() > 0)
+                if (templateSigs.size() > 0 && !ID.equals(""))
                 {
-                    tmp = Signature.createTemplate(templateSigs, HMode.AVERAGE);
-
-                    Toast.makeText(mContext, "template created", Toast.LENGTH_LONG).show();
+                    templateCreationTask t = new templateCreationTask();
+                    t.execute(templateSigs);
                 }
                 else
                 {
-                    Toast.makeText(mContext, "no signatures", Toast.LENGTH_LONG).show();
+                    Toast.makeText(mContext, "no signatures of this user", Toast.LENGTH_SHORT).show();
                 }
 
             } catch (Exception e)
@@ -215,6 +225,34 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+    private class templateCreationTask extends AsyncTask<LinkedList<Signature>, Void, Void>
+    {
+
+        @Override
+        protected void onPreExecute()
+        {
+            Toast.makeText(mContext, "creating template, please wait...", Toast.LENGTH_SHORT).show();
+            spinner.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected Void doInBackground(LinkedList<Signature>... params)
+        {
+            LinkedList<Signature> ts = params[0];
+            tmp = Signature.createTemplate(ts, TEMPLATE_MODE);
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void res)
+        {
+            spinner.setVisibility(View.GONE);
+            Toast.makeText(mContext, "template created", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
     private LinkedList<Signature> loadSigsForTemplate(String id, int max) throws Exception
     {
         LinkedList<Signature> sigs = new LinkedList<>();
@@ -223,18 +261,41 @@ public class MainActivity extends AppCompatActivity
         int count = 0;
         for (final File fileEntry : mainDir.listFiles())
         {
+
             if (!fileEntry.isDirectory())
             {
+
                 String filename = fileEntry.getName();
-                if (filename.startsWith(ID + ID_SEPARATOR))
+
+                if (filename.startsWith(ID))
                 {
-                    sigs.add(readSigFromFile(filename, false, false));
-                    ++count;
+                    if (!filename.contains(".png") && !filename.contains("_RAW"))
+                    {
+                        sigs.add(readSigFromFile(filename, false, false));
+
+
+                        if (!sigs.getLast().isEmpty()) ++count;
+                    }
                 }
+
             }
 
-            if (count >= max) return sigs;
+            if (count >= max)
+            {
+
+                break;
+            }
+
         }
+
+        LinkedList<Signature> toDelete = new LinkedList<>();
+
+        for (Signature s : sigs)
+        {
+            if (s.isEmpty()) toDelete.add(s);
+        }
+        sigs.removeAll(toDelete);
+
         return sigs;
     }
 
@@ -257,26 +318,39 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onClick(View v)
         {
+            Toast.makeText(mContext, "verifying...", Toast.LENGTH_SHORT).show();
+
             try
             {
-                sig.setID(ID);
-                writeSigToFile(sig.name + "_RAW.txt", sig, false, false);
                 sig.normalize();
-                writeSigToFile(sig.name + ".txt", sig, false, false);
-
-                double score = Signature.compare(sig, tmp, false);
-
-                if (score < THRESHOLD)
+                if (sig.isEmpty())
                 {
-                    Toast.makeText(mContext, "OK! :) " + score, Toast.LENGTH_LONG).show();
+                    Toast.makeText(mContext, "please sign", Toast.LENGTH_SHORT).show();
+                }
+                else if(tmp.isEmpty())
+                {
+                    Toast.makeText(mContext, "no template", Toast.LENGTH_SHORT).show();
                 }
                 else
                 {
-                    Toast.makeText(mContext, ":( NIE OK :( " + score, Toast.LENGTH_LONG).show();
-                }
+                    double score = Signature.compare(sig, tmp, false);
 
-                captureSpenSurfaceView(sig.name);
-                clearCurrentSig();
+                    if (score < THRESHOLD)
+                    {
+                        Toast.makeText(mContext, "OK! :) " + score, Toast.LENGTH_LONG).show();
+
+                        sig.setID(ID);
+                        writeSigToFile(sig.name + "_VER" + ".txt", sig, false, false);
+
+
+                    } else
+                    {
+                        Toast.makeText(mContext, ":( NIE OK :( " + score, Toast.LENGTH_LONG).show();
+                    }
+
+                    captureSpenSurfaceView(sig.name);
+                    clearCurrentSig();
+                }
 
             } catch (Exception e)
             {
@@ -320,6 +394,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+
+
+
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         verifyStoragePermissions(this);
 
@@ -465,6 +542,8 @@ public class MainActivity extends AppCompatActivity
 
         Button button_FRG = (Button) findViewById(R.id.button_FRG);
         button_FRG.setOnClickListener(button_FRGListener);
+
+        spinner = (ProgressBar)findViewById(R.id.progressBar1);
     }
 
     /*czyści obecnie tworzony podpis*/

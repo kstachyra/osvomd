@@ -9,5 +9,5 @@ package ks.pdi1;
  */
 public enum HMode
 {
-    ALL, BEST, AVERAGE, MEDIAN;
+    H_ALL, H_BEST, H_AVERAGE, H_MEDIAN, BEST, ADTW;
 }
