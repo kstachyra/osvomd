@@ -160,7 +160,6 @@ public class Signature
                 pickIdx = i;
             }
         }
-        //System.out.println("pdi.kkk." + "wybrano podpis o inx " + pickIdx + "który miał najgorszą wartość jedynie " + bestScore);
         return hiddenSignatures.get(pickIdx);
     }
 
@@ -177,7 +176,7 @@ public class Signature
         {
             if (s.points.size() != size)
             {
-                System.out.println("pdi.signature.err" + "different signatures size!");
+                Log.d("pdi.signature.err", "different signatures size!");
                 return null;
             }
         }
@@ -303,7 +302,6 @@ public class Signature
             Signature s = signatures.get(i);
             if (s != null)
             {
-                System.out.println(s.points.size() + " -> " + i);
                 pointsToIndex.add(new Pair<Integer, Integer>(s.points.size(), i));
             }
         }
@@ -332,15 +330,8 @@ public class Signature
             pointsToIndex.add(new Pair<Integer, Integer>(0, -1));
         }
 
-        for (int i =0; i<pointsToIndex.size(); ++i)
-        {
-            System.out.println(pointsToIndex.get(i).first + " -> " +pointsToIndex.get(i).first);
-        }
-
         //index podpisu mediany czasu
         Integer pickedIndex = pointsToIndex.get(((pointsToIndex.size() - 1) / 2) - 1).first;
-
-        System.out.println("PICKED" + pickedIndex);
 
         Signature firstTemplateMedian = null;
         if (pickedIndex != -1)
@@ -349,7 +340,7 @@ public class Signature
         }
         else
         {
-            System.out.println("ERROR firstTemplateMedian!");
+            Log.d("pdi.signature.err", "ERROR firstTemplateMedian!");
         }
 
         return firstTemplateMedian;
@@ -470,10 +461,9 @@ public class Signature
                 this.resize();
                 this.reTime();
                 this.rePress();
-                //System.out.println("pdi.signature" + "signature normalized");
             } else
             {
-                System.out.println("pdi.signature" + "can't normalize, !points.size > 0");
+                Log.d("pdi.signature", "can't normalize, !points.size > 0");
             }
 
             reparametrize(this, this.points.size(), true);
@@ -509,7 +499,7 @@ public class Signature
     {
         for (Point p : points)
         {
-            System.out.println("pdi.signature.\t" + p.toString());
+            Log.d("pdi.signature.\t", p.toString());
         }
     }
 

@@ -2,6 +2,9 @@ package ks.pdi1;
 
 public class Constants
 {
+    /*sig id separator*/
+    public static String ID_SEPARATOR = "_";
+
     /*część okna przeznaczona na podpis*/
     public static final double SIZE = 0.8f;
 

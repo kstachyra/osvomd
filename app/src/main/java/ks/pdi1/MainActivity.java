@@ -48,7 +48,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 import javax.crypto.SecretKey;
 
@@ -113,10 +112,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onClick(View v)
         {
-
             //Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
-            //captureSpenSurfaceView(sig.name);
-
             try
             {
                 sig.setID(ID);
@@ -130,14 +126,6 @@ public class MainActivity extends AppCompatActivity
             {
                 e.printStackTrace();
             }
-
-            //sig2 = readSigFromFile("KK", true, true);
-            //sig = loadSVCFile("U1S1.TXT");
-            //Log.d("pdi.kkk", "time is " + sig.getSignatureTime());
-
-            /*czyszczenie strony
-            mSpenPageDoc.removeAllObject();
-            mSpenSurfaceView.update();*/
         }
     };
 
@@ -167,139 +155,6 @@ public class MainActivity extends AppCompatActivity
         {
             //Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
             clearCurrentSig();
-
-            /*ArrayList<LinkedList<Signature>> genuine = new ArrayList<>();
-            ArrayList<LinkedList<Signature>> forgery = new ArrayList<>();
-            ArrayList<LinkedList<Signature>> skilled = new ArrayList<>();*/
-            try
-            {
-                /*//liczba badanych podpisów
-                final int k = 10;
-
-                genuine.add(0, new LinkedList<Signature>());
-                for (int i=1; i<=k; ++i)
-                {
-                    genuine.add(i, new LinkedList<Signature>());
-                    for (int j=1; j<=10; ++j)
-                    {
-                        String filename = String.format("%03d", i) + "_1_" + j + ".sig";
-                        Signature s = loadSUSigFile(filename);
-                        if (s!= null) genuine.get(i).add(s);
-                    }
-                }
-
-                forgery.add(0, new LinkedList<Signature>());
-                for (int i=1; i<=k; ++i)
-                {
-                    forgery.add(i, new LinkedList<Signature>());
-                    for (int j=1; j<=5; ++j)
-                    {
-                        String filename = String.format("%03d", i) + "_f_" + j + ".sig";
-                        Signature s = loadSUSigFile(filename);
-                        if (s!= null) forgery.get(i).add(s);
-                    }
-                }
-
-                skilled.add(0, new LinkedList<Signature>());
-                for (int i=1; i<=k; ++i)
-                {
-                    skilled.add(i, new LinkedList<Signature>());
-                    for (int j=6; j<=10; ++j)
-                    {
-                        String filename = String.format("%03d", i) + "_f_" + j + ".sig";
-                        Signature s = loadSUSigFile(filename);
-                        if (s!= null) skilled.get(i).add(s);
-                    }
-                }
-
-                int ping = 0;
-                List<Double> sameScores = new LinkedList<>();
-                List<Double> otherScores = new LinkedList<>();
-                for (int i=1; i<=k; ++i)
-                {
-                    for (int j=1; j<=k; ++j)
-                    {
-                        Log.d("pdi.kkk", "PING " + ++ping + "/" + k*k);
-                        if (i==j)
-                        {
-                            //ta sama klasa
-                            for (Signature s1 : genuine.get(i))
-                            {
-                                for (Signature s2 : genuine.get(j))
-                                {
-                                    sameScores.add(Signature.compare(s1, s2));
-                                }
-                            }
-                        }
-                        else
-                        {
-                            //inna klasa
-                            for (Signature s1 : genuine.get(i))
-                            {
-                                for (Signature s2 : genuine.get(j))
-                                {
-                                    otherScores.add(Signature.compare(s1, s2));
-                                }
-                            }
-                        }
-                    }
-                }
-
-                writeToFile("same", sameScores.toString());
-                writeToFile("other", otherScores.toString());
-
-                Log.d("pdi.kkk", sameScores.toString());
-                Log.d("pdi.kkk", otherScores.toString());
-
-
-                /*
-                LinkedList<Signature> templates = new LinkedList<>();
-                //ile podpisów do wzorca
-                final int tNr = 3;
-                templates.add(null);
-                for (List<Signature> sigList : genuine)
-                {
-                    if (sigList.size() > 0)
-                    {
-                        List<Signature> temp = new LinkedList<>();
-                        for (int i=0; i<tNr; ++i)
-                        {
-                            temp.add(sigList.get(tNr));
-                        }
-                        templates.add(Signature.templateSignature(temp, 10));
-                    }
-                    Log.d("pdi.kkk", "jeden template zrobiony...");
-                }*/
-
-
-
-
-
-
-
-
-
-                //Signature sig3 = readSigFromFile("001_3_1.sig", false, false);
-
-
-
-
-                //sig1.print();
-
-                /*List<Signature> tempList = new LinkedList<Signature>();
-                tempList.add(sig1);
-                tempList.add(sig2);
-                tempList.add(sig3);
-
-                Signature template = Signature.templateSignature(tempList, MAX_PATTERN_ITERATIONS);*/
-
-                //template.print();
-
-                //Signature.compare(pattern, sig2);
-            } catch (Exception e)
-            {
-                e.printStackTrace();
-            }
         }
     };
 
@@ -321,6 +176,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 ID = input.getText().toString();
                 ID = ID.replace(" ", "");
+                ID = ID + ID_SEPARATOR;
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -799,74 +655,6 @@ public class MainActivity extends AppCompatActivity
             );
         }
     }
-
-    /*public boolean drawPoint(View view, float x, float y, float press, int layerId)
-    {
-            SpenControlBase control = mSpenSurfaceView.getControl();
-            if (control == null)
-            {
-                    // Set Bitmap file for ObjectImage.
-                    SpenObjectImage imgObj = new SpenObjectImage();
-                    Bitmap imageBitmap = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.ic_action_name);
-                    imgObj.setImage(imageBitmap);
-                    // Set the position of ObjectImage and add it to PageDoc.
-
-
-
-                    float panX = mSpenSurfaceView.getPan().x;
-                    float panY = mSpenSurfaceView.getPan().y;
-                    float zoom = mSpenSurfaceView.getZoomRatio();
-                    float imgWidth = imageBitmap.getWidth() * zoom;
-                    float imgHeight = imageBitmap.getHeight() * zoom;
-                    RectF imageRect = new RectF();
-                    imageRect.set((x - imgWidth / 2) / zoom + panX,
-                            (y - imgHeight / 2) / zoom + panY,
-                            (x + imgWidth / 2) / zoom + panX,
-                            (y + imgHeight / 2) / zoom + panY);
-                    imgObj.setRect(imageRect, true);
-
-
-                synchronized (lock)
-                {
-                    mSpenPageDoc.setCurrentLayer(layerId);
-                    mSpenPageDoc.appendObject(imgObj);
-                    mSpenSurfaceView.update();
-                    mSpenPageDoc.setCurrentLayer(MAIN_LAYER);
-                }
-
-                    imageBitmap.recycle();
-
-
-
-                return true;
-            }
-        return true;
-    }
-
-    public int aa = 150;
-    public int bb = 150;
-
-    Thread thread = new Thread() {
-        @Override
-        public void run() {
-            try {
-                while(true) {
-
-
-
-
-                    sleep(200);
-                    drawPoint(mSpenSurfaceView, aa, bb, 0.5f, BACKGROUND_LAYER);
-
-                    aa += 2;
-                    bb+= 1;
-                }
-            } catch (InterruptedException e) {
-                Log.d("pdi.thread", "przerwano wątek", e);
-            }
-        }
-    };*/
-
 }
 
 
