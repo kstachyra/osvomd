@@ -10,11 +10,43 @@
     tools:layout_editor_absoluteX="0dp">
 
     <Button
-        android:id="@+id/button_POR"
+        android:id="@+id/button_FRG"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:text="FORGE"
+        app:layout_constraintEnd_toStartOf="@+id/button_CHK"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <Button
+        android:id="@+id/button_CHK"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:text="CHECK"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <Button
+        android:id="@+id/button_TMP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="TEMPLATE"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <Button
+        android:id="@+id/button_OK"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
         android:text="OK"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -25,7 +57,7 @@
         android:layout_width="88dp"
         android:layout_height="48dp"
         android:layout_marginBottom="8dp"
-        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
         android:text="NEW"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -41,14 +73,14 @@
         android:text="CLR"
         app:layout_constraintBottom_toBottomOf="@+id/spenViewLayout"
         app:layout_constraintLeft_toRightOf="@+id/button_WZ"
-        app:layout_constraintRight_toLeftOf="@+id/button_POR"
+        app:layout_constraintRight_toLeftOf="@+id/button_OK"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp" />
 
     <RelativeLayout
         android:id="@+id/spenViewLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="w,1:1"
         app:layout_constraintHorizontal_bias="0.0"

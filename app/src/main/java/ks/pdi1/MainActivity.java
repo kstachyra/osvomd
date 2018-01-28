@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity
 
     private static String ID = "";
     private static Signature sig;
+    private static Signature tmp;
 
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -107,12 +108,12 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    private final View.OnClickListener button_PORListener = new View.OnClickListener()
+    private final View.OnClickListener button_OKListener = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
         {
-            //Toast.makeText(mContext, "POR button", Toast.LENGTH_LONG).show();
+            //Toast.makeText(mContext, "OK button", Toast.LENGTH_LONG).show();
             try
             {
                 sig.setID(ID);
@@ -129,22 +130,13 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    private final View.OnClickListener button_WZListener = new View.OnClickListener()
+    private final View.OnClickListener button_NEWListener = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
         {
-            //Toast.makeText(mContext, "WZ button", Toast.LENGTH_LONG).show();
-
+            //Toast.makeText(mContext, "NEW button", Toast.LENGTH_LONG).show();
             showDialogWindow();
-
-            try
-            {
-            } catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-
         }
     };
 
@@ -155,6 +147,141 @@ public class MainActivity extends AppCompatActivity
         {
             //Toast.makeText(mContext, "CLR button", Toast.LENGTH_LONG).show();
             clearCurrentSig();
+        }
+    };
+
+    private final View.OnClickListener button_FRGListener = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v)
+        {
+            //Toast.makeText(mContext, "FRG button", Toast.LENGTH_LONG).show();
+
+            try
+            {
+                sig.setID(ID);
+                writeSigToFile("_FORGERY_" + sig.name + "_RAW.txt", sig, false, false);
+                sig.normalize();
+                writeSigToFile("_FORGERY_" + sig.name + ".txt", sig, false, false);
+
+                double score = Signature.compare(sig, tmp, false);
+
+                if (score < THRESHOLD)
+                {
+                    Toast.makeText(mContext, "OK! :) " + score, Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    Toast.makeText(mContext, ":( NIE OK :( " + score, Toast.LENGTH_LONG).show();
+                }
+
+                captureSpenSurfaceView("_FORGERY_" + sig.name);
+                clearCurrentSig();
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    private final View.OnClickListener button_TMPListener = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v)
+        {
+            //Toast.makeText(mContext, "TMP button", Toast.LENGTH_LONG).show();
+
+            try
+            {
+                LinkedList<Signature> templateSigs = loadSigsForTemplate(ID, MAX_TEMPLATE_SIGS);
+
+
+                if (templateSigs.size() > 0)
+                {
+                    tmp = Signature.createTemplate(templateSigs, HMode.AVERAGE);
+
+                    Toast.makeText(mContext, "template created", Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    Toast.makeText(mContext, "no signatures", Toast.LENGTH_LONG).show();
+                }
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    private LinkedList<Signature> loadSigsForTemplate(String id, int max) throws Exception
+    {
+        LinkedList<Signature> sigs = new LinkedList<>();
+
+        File mainDir = getFilePath();
+        int count = 0;
+        for (final File fileEntry : mainDir.listFiles())
+        {
+            if (!fileEntry.isDirectory())
+            {
+                String filename = fileEntry.getName();
+                if (filename.startsWith(ID + ID_SEPARATOR))
+                {
+                    sigs.add(readSigFromFile(filename, false, false));
+                    ++count;
+                }
+            }
+
+            if (count >= max) return sigs;
+        }
+        return sigs;
+    }
+
+    public void listFilesForFolder(final File folder)
+    {
+        for (final File fileEntry : folder.listFiles())
+        {
+            if (fileEntry.isDirectory())
+            {
+                listFilesForFolder(fileEntry);
+            } else
+            {
+                System.out.println(fileEntry.getName());
+            }
+        }
+    }
+
+    private final View.OnClickListener button_CHKListener = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v)
+        {
+            try
+            {
+                sig.setID(ID);
+                writeSigToFile(sig.name + "_RAW.txt", sig, false, false);
+                sig.normalize();
+                writeSigToFile(sig.name + ".txt", sig, false, false);
+
+                double score = Signature.compare(sig, tmp, false);
+
+                if (score < THRESHOLD)
+                {
+                    Toast.makeText(mContext, "OK! :) " + score, Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    Toast.makeText(mContext, ":( NIE OK :( " + score, Toast.LENGTH_LONG).show();
+                }
+
+                captureSpenSurfaceView(sig.name);
+                clearCurrentSig();
+
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         }
     };
 
@@ -176,6 +303,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 ID = input.getText().toString();
                 ID = ID.replace(" ", "");
+                ID = ID.replace(ID_SEPARATOR, "");
                 ID = ID + ID_SEPARATOR;
             }
         });
@@ -320,14 +448,23 @@ public class MainActivity extends AppCompatActivity
         mSpenSurfaceView.setHoverListener(onMyHoverEvent);
         mSpenSurfaceView.setTouchListener(mPenTouchListener);
 
-        Button button_POR = (Button) findViewById(R.id.button_POR);
-        button_POR.setOnClickListener(button_PORListener);
+        Button button_OK = (Button) findViewById(R.id.button_OK);
+        button_OK.setOnClickListener(button_OKListener);
 
-        Button button_WZ = (Button) findViewById(R.id.button_WZ);
-        button_WZ.setOnClickListener(button_WZListener);
+        Button button_NEW = (Button) findViewById(R.id.button_WZ);
+        button_NEW.setOnClickListener(button_NEWListener);
 
         Button button_CLR = (Button) findViewById(R.id.button_CLR);
         button_CLR.setOnClickListener(button_CLRListener);
+
+        Button button_TMP = (Button) findViewById(R.id.button_TMP);
+        button_TMP.setOnClickListener(button_TMPListener);
+
+        Button button_CHK = (Button) findViewById(R.id.button_CHK);
+        button_CHK.setOnClickListener(button_CHKListener);
+
+        Button button_FRG = (Button) findViewById(R.id.button_FRG);
+        button_FRG.setOnClickListener(button_FRGListener);
     }
 
     /*czyści obecnie tworzony podpis*/

@@ -1,7 +1,5 @@
 package ks.pdi1;
 
-import android.annotation.SuppressLint;
-import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
@@ -16,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static java.lang.Math.abs;
+import static ks.pdi1.Constants.MAX_TEMPLATE_ITERATIONS;
 import static ks.pdi1.Constants.SIGNATURE_TIME_LIMIT;
 import static ks.pdi1.Constants.SIGNATURE_TIME_WEIGHT;
 
@@ -672,5 +671,31 @@ public class Signature
                 this.addPoint(Long.parseLong(values[0]), Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3]));
             }
         }
+    }
+
+    public static Signature createTemplate(LinkedList<Signature> signatures, HMode mode)
+    {
+        Signature firstTemplate = null;
+        if (!signatures.isEmpty())
+        {
+            if (mode == HMode.ALL)
+            {
+                firstTemplate = null;
+            }
+            else if (mode == HMode.BEST)
+            {
+                firstTemplate = Signature.pickBestSignature(signatures, signatures);
+            }
+            else if (mode == HMode.AVERAGE)
+            {
+                firstTemplate = Signature.firstTemplateAverage(signatures);
+            }
+            else if (mode == HMode.MEDIAN)
+            {
+                firstTemplate = Signature.firstTemplateMedian(signatures);
+            }
+        }
+
+        return Signature.templateSignature(signatures, firstTemplate, MAX_TEMPLATE_ITERATIONS);
     }
 }

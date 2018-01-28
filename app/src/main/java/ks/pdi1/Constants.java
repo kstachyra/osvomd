@@ -21,13 +21,16 @@ public class Constants
     public final static String APK_CONSTANT = "asdkl;";
 
     /*pattern*/
-    public final static int MAX_PATTERN_ITERATIONS = 10;
+    public final static int MAX_TEMPLATE_ITERATIONS = 10;
+    public final static int MAX_TEMPLATE_SIGS = 10;
 
     /*compare*/
     public static double X_W = 0.8;
     public static double Y_W = 2.0;
     public static double P_W = 0.5;
     public static double T_W = 0.0000001;
+
+    public static double THRESHOLD = 0.2158;
 
     /*procentowa ignorowana róznica czasu*/
     public static double SIGNATURE_TIME_LIMIT = 0.27;
