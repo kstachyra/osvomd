@@ -175,6 +175,8 @@ public class MainActivity extends AppCompatActivity
                 }
                 else
                 {
+                    Toast.makeText(mContext, "verifying...", Toast.LENGTH_SHORT).show();
+
                     writeSigToFile("_FORGERY_" + sig.name + ".txt", sig, false, false);
 
                     double score = Signature.compare(sig, tmp, false);
@@ -188,10 +190,11 @@ public class MainActivity extends AppCompatActivity
                     }
 
                     captureSpenSurfaceView("_FORGERY_" + sig.name);
-                    clearCurrentSig();
+                    //clearCurrentSig();
                 }
             } catch (Exception e)
             {
+                Toast.makeText(mContext, "no template", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
         }
@@ -318,8 +321,6 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onClick(View v)
         {
-            Toast.makeText(mContext, "verifying...", Toast.LENGTH_SHORT).show();
-
             try
             {
                 sig.normalize();
@@ -333,6 +334,8 @@ public class MainActivity extends AppCompatActivity
                 }
                 else
                 {
+                    Toast.makeText(mContext, "verifying...", Toast.LENGTH_SHORT).show();
+
                     double score = Signature.compare(sig, tmp, false);
 
                     if (score < THRESHOLD)
@@ -349,11 +352,12 @@ public class MainActivity extends AppCompatActivity
                     }
 
                     captureSpenSurfaceView(sig.name);
-                    clearCurrentSig();
+                    //clearCurrentSig();
                 }
 
             } catch (Exception e)
             {
+                Toast.makeText(mContext, "no template", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
         }

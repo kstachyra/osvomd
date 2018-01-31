@@ -21,7 +21,7 @@ public class Constants
     public final static String APK_CONSTANT = "asdkl;";
 
     /*template*/
-    public final static int MAX_TEMPLATE_ITERATIONS = 5;
+    public final static int MAX_TEMPLATE_ITERATIONS = 7;
     public final static int MAX_TEMPLATE_SIGS = 5;
     public final static HMode TEMPLATE_MODE = HMode.H_AVERAGE;
 
